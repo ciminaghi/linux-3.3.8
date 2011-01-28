@@ -138,4 +138,6 @@ source "drivers/devfreq/Kconfig"
 
 source "drivers/mcuio/Kconfig"
 
+source "drivers/pwm/Kconfig"
+
 endmenu
