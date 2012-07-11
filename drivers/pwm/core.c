@@ -389,9 +389,9 @@ struct pwm_device *pwm_get(struct device *dev, const char *con_id)
 	struct pwm_device *pwm = ERR_PTR(-EAGAIN);
 	const char *dev_id = dev ? dev_name(dev) : NULL;
 	struct pwm_chip *chip = NULL;
+	unsigned int index = 0;
 	unsigned int best = 0;
 	struct pwm_lookup *p;
-	unsigned int index;
 	unsigned int match;
 
 	/*
