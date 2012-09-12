@@ -4,6 +4,7 @@
 struct pwm_device;
 struct seq_file;
 
+#if IS_ENABLED(CONFIG_PWM) || IS_ENABLED(CONFIG_HAVE_PWM)
 /*
  * pwm_request - request a PWM device
  */
@@ -28,8 +29,31 @@ int pwm_enable(struct pwm_device *pwm);
  * pwm_disable - stop a PWM output toggling
  */
 void pwm_disable(struct pwm_device *pwm);
+#else
+static inline struct pwm_device *pwm_request(int pwm_id, const char *label)
+{
+	return ERR_PTR(-ENODEV);
+}
 
-#ifdef CONFIG_PWM
+static inline void pwm_free(struct pwm_device *pwm)
+{
+}
+
+static inline int pwm_config(struct pwm_device *pwm, int duty_ns, int period_ns)
+{
+	return -EINVAL;
+}
+
+static inline int pwm_enable(struct pwm_device *pwm)
+{
+	return -EINVAL;
+}
+
+static inline void pwm_disable(struct pwm_device *pwm)
+{
+}
+#endif
+
 struct pwm_chip;
 
 /**
@@ -130,6 +154,7 @@ struct pwm_chip {
 	struct pwm_device	*pwms;
 };
 
+#if IS_ENABLED(CONFIG_PWM)
 int pwm_set_chip_data(struct pwm_device *pwm, void *data);
 void *pwm_get_chip_data(struct pwm_device *pwm);
 
@@ -144,6 +169,54 @@ void pwm_put(struct pwm_device *pwm);
 
 struct pwm_device *devm_pwm_get(struct device *dev, const char *consumer);
 void devm_pwm_put(struct device *dev, struct pwm_device *pwm);
+#else
+static inline int pwm_set_chip_data(struct pwm_device *pwm, void *data)
+{
+	return -EINVAL;
+}
+
+static inline void *pwm_get_chip_data(struct pwm_device *pwm)
+{
+	return NULL;
+}
+
+static inline int pwmchip_add(struct pwm_chip *chip)
+{
+	return -EINVAL;
+}
+
+static inline int pwmchip_remove(struct pwm_chip *chip)
+{
+	return -EINVAL;
+}
+
+static inline struct pwm_device *pwm_request_from_chip(struct pwm_chip *chip,
+						       unsigned int index,
+						       const char *label)
+{
+	return ERR_PTR(-ENODEV);
+}
+
+static inline struct pwm_device *pwm_get(struct device *dev,
+					 const char *consumer)
+{
+	return ERR_PTR(-ENODEV);
+}
+
+static inline void pwm_put(struct pwm_device *pwm)
+{
+}
+
+static inline struct pwm_device *devm_pwm_get(struct device *dev,
+					      const char *consumer)
+{
+	return ERR_PTR(-ENODEV);
+}
+
+static inline void devm_pwm_put(struct device *dev, struct pwm_device *pwm)
+{
+}
+#endif
 
 struct pwm_lookup {
 	struct list_head list;
@@ -161,8 +234,12 @@ struct pwm_lookup {
 		.con_id = _con_id,			\
 	}
 
+#if IS_ENABLED(CONFIG_PWM)
 void pwm_add_table(struct pwm_lookup *table, size_t num);
-
+#else
+static inline void pwm_add_table(struct pwm_lookup *table, size_t num)
+{
+}
 #endif
 
 #endif /* __LINUX_PWM_H */
