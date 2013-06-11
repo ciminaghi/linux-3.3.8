@@ -10,4 +10,8 @@ menuconfig PWM
 
 if PWM
 
+config PWM_SYSFS
+	bool
+	default y if SYSFS
+
 endif

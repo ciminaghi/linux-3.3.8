@@ -203,6 +203,8 @@ int pwmchip_add(struct pwm_chip *chip)
 
 	ret = 0;
 
+	pwmchip_sysfs_export(chip);
+
 out:
 	mutex_unlock(&pwm_lock);
 	return ret;
@@ -234,6 +236,8 @@ int pwmchip_remove(struct pwm_chip *chip)
 
 	list_del_init(&chip->list);
 	free_pwms(chip);
+
+	pwmchip_sysfs_unexport(chip);
 
 out:
 	mutex_unlock(&pwm_lock);
@@ -327,10 +331,19 @@ EXPORT_SYMBOL_GPL(pwm_free);
  */
 int pwm_config(struct pwm_device *pwm, int duty_ns, int period_ns)
 {
+	int err;
+
 	if (!pwm || duty_ns < 0 || period_ns <= 0 || duty_ns > period_ns)
 		return -EINVAL;
 
-	return pwm->chip->ops->config(pwm->chip, pwm, duty_ns, period_ns);
+	err = pwm->chip->ops->config(pwm->chip, pwm, duty_ns, period_ns);
+	if (err)
+		return err;
+
+	pwm->duty_cycle = duty_ns;
+	pwm->period = period_ns;
+
+	return 0;
 }
 EXPORT_SYMBOL_GPL(pwm_config);
 
@@ -343,6 +356,8 @@ EXPORT_SYMBOL_GPL(pwm_config);
  */
 int pwm_set_polarity(struct pwm_device *pwm, enum pwm_polarity polarity)
 {
+	int err;
+
 	if (!pwm || !pwm->chip->ops)
 		return -EINVAL;
 
@@ -352,7 +367,13 @@ int pwm_set_polarity(struct pwm_device *pwm, enum pwm_polarity polarity)
 	if (test_bit(PWMF_ENABLED, &pwm->flags))
 		return -EBUSY;
 
-	return pwm->chip->ops->set_polarity(pwm->chip, pwm, polarity);
+	err = pwm->chip->ops->set_polarity(pwm->chip, pwm, polarity);
+	if (err)
+		return err;
+
+	pwm->polarity = polarity;
+
+	return 0;
 }
 EXPORT_SYMBOL_GPL(pwm_set_polarity);
 
