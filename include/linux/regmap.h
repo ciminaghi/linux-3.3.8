@@ -61,6 +61,12 @@ struct reg_default {
  *                register cache support).
  * @num_reg_defaults: Number of elements in reg_defaults.
  *
+ * @reg_read:    Optional callback that if filled will be used to perform
+ *               all the reads from the registers. Should only be provided for
+ *               devices whos read operation cannot be represented as a simple 
+ *               operation on a bus such as SPI, I2C, etc. Most of the devices 
+ *               not need this.
+ * @reg_write:   Same as above for writing.
  * @read_flag_mask: Mask to be set in the top byte of the register when doing
  *                  a read.
  * @write_flag_mask: Mask to be set in the top byte of the register when doing
@@ -87,6 +93,9 @@ struct regmap_config {
 	enum regcache_type cache_type;
 	const void *reg_defaults_raw;
 	unsigned int num_reg_defaults_raw;
+
+	int (*reg_read)(void *context, unsigned int reg, unsigned int *val);
+	int (*reg_write)(void *context, unsigned int reg, unsigned int val);
 
 	u8 read_flag_mask;
 	u8 write_flag_mask;

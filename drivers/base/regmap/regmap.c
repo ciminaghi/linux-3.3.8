@@ -157,7 +157,7 @@ struct regmap *regmap_init(struct device *dev,
 	struct regmap *map;
 	int ret = -EINVAL;
 
-	if (!bus || !config)
+	if (!config)
 		goto err;
 
 	map = kzalloc(sizeof(*map), GFP_KERNEL);
@@ -179,14 +179,24 @@ struct regmap *regmap_init(struct device *dev,
 	map->volatile_reg = config->volatile_reg;
 	map->precious_reg = config->precious_reg;
 	map->cache_type = config->cache_type;
-	map->reg_read = _regmap_bus_read;
 
 	if (config->read_flag_mask || config->write_flag_mask) {
 		map->read_flag_mask = config->read_flag_mask;
 		map->write_flag_mask = config->write_flag_mask;
-	} else {
+	} else if (bus) {
 		map->read_flag_mask = bus->read_flag_mask;
 	}
+
+	if (!bus) {
+		map->reg_read  = config->reg_read;
+		map->reg_write = config->reg_write;
+
+		map->defer_caching = false;
+		goto skip_format_initialization;
+	} else {
+		map->reg_read  = _regmap_bus_read;
+	}
+
 
 	switch (config->reg_bits) {
 	case 4:
@@ -252,11 +262,15 @@ struct regmap *regmap_init(struct device *dev,
 		goto err_map;
 	}
 
-	if (map->format.format_write)
+	if (map->format.format_write) {
+		map->defer_caching = false;
 		map->reg_write = _regmap_bus_formatted_write;
-	else if (map->format.format_val)
+	} else if (map->format.format_val) {
+		map->defer_caching = true;
 		map->reg_write = _regmap_bus_raw_write;
+	}
 
+skip_format_initialization:
 	regmap_debugfs_init(map);
 
 	ret = regcache_init(map, config);
@@ -333,6 +347,8 @@ static int _regmap_raw_write(struct regmap *map, unsigned int reg,
 	size_t len;
 	int i;
 
+	BUG_ON(!map->bus);
+
 	/* Check for unwritable registers before we start */
 	if (map->writeable_reg)
 		for (i = 0; i < val_len / map->format.val_bytes; i++)
@@ -384,7 +400,7 @@ static int _regmap_bus_formatted_write(void *context, unsigned int reg,
 	int ret;
 	struct regmap *map = context;
 
-	BUG_ON(!map->format.format_write);
+	BUG_ON(!map->bus || !map->format.format_write);
 
 	map->format.format_write(map, reg, val);
 
@@ -403,7 +419,7 @@ static int _regmap_bus_raw_write(void *context, unsigned int reg,
 {
 	struct regmap *map = context;
 
-	BUG_ON(!map->format.format_val);
+	BUG_ON(!map->bus || !map->format.format_val);
 
 	map->format.format_val(map->work_buf + map->format.reg_bytes, val);
 	return _regmap_raw_write(map, reg,
@@ -412,12 +428,18 @@ static int _regmap_bus_raw_write(void *context, unsigned int reg,
 				 map->format.val_bytes);
 }
 
+static inline void *_regmap_map_get_context(struct regmap *map)
+{
+	return (map->bus) ? map : map->bus_context;
+}
+
 int _regmap_write(struct regmap *map, unsigned int reg,
 		  unsigned int val)
 {
 	int ret;
+	void *context = _regmap_map_get_context(map);
 
-	if (!map->cache_bypass) {
+	if (!map->cache_bypass && !map->defer_caching) {
 		ret = regcache_write(map, reg, val);
 		if (ret != 0)
 			return ret;
@@ -429,7 +451,7 @@ int _regmap_write(struct regmap *map, unsigned int reg,
 
 	trace_regmap_reg_write(map->dev, reg, val);
 
-	return map->reg_write(map, reg, val);
+	return map->reg_write(context, reg, val);
 }
 
 /**
@@ -478,6 +500,8 @@ int regmap_raw_write(struct regmap *map, unsigned int reg,
 	size_t val_count = val_len / map->format.val_bytes;
 	int ret;
 
+	if (!map->bus)
+		return -EINVAL;
 	WARN_ON(!regmap_volatile_range(map, reg, val_count) &&
 		map->cache_type != REGCACHE_NONE);
 
@@ -496,6 +520,8 @@ static int _regmap_raw_read(struct regmap *map, unsigned int reg, void *val,
 {
 	u8 *u8 = map->work_buf;
 	int ret;
+
+	BUG_ON(!map->bus);
 
 	map->format.format_reg(map->work_buf, reg);
 
@@ -540,6 +566,8 @@ static int _regmap_read(struct regmap *map, unsigned int reg,
 			unsigned int *val)
 {
 	int ret;
+	void *context = _regmap_map_get_context(map);
+
 	BUG_ON(!map->reg_read);
 
 	if (!map->cache_bypass) {
@@ -551,7 +579,7 @@ static int _regmap_read(struct regmap *map, unsigned int reg,
 	if (map->cache_only)
 		return -EBUSY;
 
-	ret = map->reg_read(map, reg, val);
+	ret = map->reg_read(context, reg, val);
 	if (ret == 0)
 		trace_regmap_reg_read(map->dev, reg, *val);
 
@@ -599,6 +627,8 @@ int regmap_raw_read(struct regmap *map, unsigned int reg, void *val,
 	size_t val_count = val_len / map->format.val_bytes;
 	int ret;
 
+	if (!map->bus)
+		return -EINVAL;
 	WARN_ON(!regmap_volatile_range(map, reg, val_count) &&
 		map->cache_type != REGCACHE_NONE);
 
@@ -630,6 +660,8 @@ int regmap_bulk_read(struct regmap *map, unsigned int reg, void *val,
 	size_t val_bytes = map->format.val_bytes;
 	bool vol = regmap_volatile_range(map, reg, val_count);
 
+	if (!map->bus)
+		return -EINVAL;
 	if (!map->format.parse_val)
 		return -EINVAL;
 

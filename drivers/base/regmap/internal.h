@@ -55,6 +55,8 @@ struct regmap {
 	int (*reg_read)(void *context, unsigned int reg, unsigned int *val);
 	int (*reg_write)(void *context, unsigned int reg, unsigned int val);
 
+	bool defer_caching;
+
 	/* regcache specific members */
 	const struct regcache_ops *cache_ops;
 	enum regcache_type cache_type;
