@@ -53,6 +53,7 @@ struct regmap {
 	u8 write_flag_mask;
 
 	int (*reg_read)(void *context, unsigned int reg, unsigned int *val);
+	int (*reg_write)(void *context, unsigned int reg, unsigned int val);
 
 	/* regcache specific members */
 	const struct regcache_ops *cache_ops;

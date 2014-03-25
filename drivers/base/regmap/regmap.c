@@ -22,6 +22,10 @@
 
 static int _regmap_bus_read(void *context, unsigned int reg,
 			    unsigned int *val);
+static int _regmap_bus_formatted_write(void *context, unsigned int reg,
+				       unsigned int val);
+static int _regmap_bus_raw_write(void *context, unsigned int reg,
+				 unsigned int val);
 
 bool regmap_writeable(struct regmap *map, unsigned int reg)
 {
@@ -248,6 +252,11 @@ struct regmap *regmap_init(struct device *dev,
 		goto err_map;
 	}
 
+	if (map->format.format_write)
+		map->reg_write = _regmap_bus_formatted_write;
+	else if (map->format.format_val)
+		map->reg_write = _regmap_bus_raw_write;
+
 	regmap_debugfs_init(map);
 
 	ret = regcache_init(map, config);
@@ -369,11 +378,44 @@ static int _regmap_raw_write(struct regmap *map, unsigned int reg,
 	return ret;
 }
 
+static int _regmap_bus_formatted_write(void *context, unsigned int reg,
+				       unsigned int val)
+{
+	int ret;
+	struct regmap *map = context;
+
+	BUG_ON(!map->format.format_write);
+
+	map->format.format_write(map, reg, val);
+
+	trace_regmap_hw_write_start(map->dev, reg, 1);
+
+	ret = map->bus->write(map->bus_context, map->work_buf,
+			      map->format.buf_size);
+
+	trace_regmap_hw_write_done(map->dev, reg, 1);
+
+	return ret;
+}
+
+static int _regmap_bus_raw_write(void *context, unsigned int reg,
+				 unsigned int val)
+{
+	struct regmap *map = context;
+
+	BUG_ON(!map->format.format_val);
+
+	map->format.format_val(map->work_buf + map->format.reg_bytes, val);
+	return _regmap_raw_write(map, reg,
+				 map->work_buf +
+				 map->format.reg_bytes,
+				 map->format.val_bytes);
+}
+
 int _regmap_write(struct regmap *map, unsigned int reg,
 		  unsigned int val)
 {
 	int ret;
-	BUG_ON(!map->format.format_write && !map->format.format_val);
 
 	if (!map->cache_bypass) {
 		ret = regcache_write(map, reg, val);
@@ -387,24 +429,7 @@ int _regmap_write(struct regmap *map, unsigned int reg,
 
 	trace_regmap_reg_write(map->dev, reg, val);
 
-	if (map->format.format_write) {
-		map->format.format_write(map, reg, val);
-
-		trace_regmap_hw_write_start(map->dev, reg, 1);
-
-		ret = map->bus->write(map->bus_context, map->work_buf,
-				      map->format.buf_size);
-
-		trace_regmap_hw_write_done(map->dev, reg, 1);
-
-		return ret;
-	} else {
-		map->format.format_val(map->work_buf + map->format.reg_bytes,
-				       val);
-		return _regmap_raw_write(map, reg,
-					 map->work_buf + map->format.reg_bytes,
-					 map->format.val_bytes);
-	}
+	return map->reg_write(map, reg, val);
 }
 
 /**
