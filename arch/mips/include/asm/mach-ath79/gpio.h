@@ -13,7 +13,7 @@
 #ifndef __ASM_MACH_ATH79_GPIO_H
 #define __ASM_MACH_ATH79_GPIO_H
 
-#define ARCH_NR_GPIOS	64
+#define ARCH_NR_GPIOS	512
 #include <asm-generic/gpio.h>
 
 int gpio_to_irq(unsigned gpio);
