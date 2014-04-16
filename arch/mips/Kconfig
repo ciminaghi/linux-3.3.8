@@ -87,6 +87,7 @@ config ATH79
 	select SYS_HAS_EARLY_PRINTK
 	select SYS_SUPPORTS_32BIT_KERNEL
 	select SYS_SUPPORTS_BIG_ENDIAN
+	select GENERIC_IRQ_CHIP
 	help
 	  Support for the Atheros AR71XX/AR724X/AR913X SoCs.
 
