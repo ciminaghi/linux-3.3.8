@@ -127,7 +127,7 @@ EXPORT_SYMBOL_GPL(regmap_init_i2c);
 struct regmap *devm_regmap_init_i2c(struct i2c_client *i2c,
 				    const struct regmap_config *config)
 {
-	return devm_regmap_init(&i2c->dev, &regmap_i2c, config);
+	return devm_regmap_init(&i2c->dev, &regmap_i2c, &i2c->dev, config);
 }
 EXPORT_SYMBOL_GPL(devm_regmap_init_i2c);
 

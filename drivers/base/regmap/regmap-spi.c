@@ -86,7 +86,7 @@ EXPORT_SYMBOL_GPL(regmap_init_spi);
 struct regmap *devm_regmap_init_spi(struct spi_device *spi,
 				    const struct regmap_config *config)
 {
-	return devm_regmap_init(&spi->dev, &regmap_spi, config);
+	return devm_regmap_init(&spi->dev, &regmap_spi, &spi->dev, config);
 }
 EXPORT_SYMBOL_GPL(devm_regmap_init_spi);
 
