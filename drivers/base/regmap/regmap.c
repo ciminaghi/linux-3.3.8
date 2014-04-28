@@ -281,7 +281,7 @@ struct regmap *regmap_init(struct device *dev,
 	}
 
 skip_format_initialization:
-	regmap_debugfs_init(map);
+	regmap_debugfs_init(map, config->name);
 
 	ret = regcache_init(map, config);
 	if (ret < 0)
