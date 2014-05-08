@@ -3,7 +3,7 @@
 # subsystems should select the appropriate symbols.
 
 config REGMAP
-	default y if (REGMAP_I2C || REGMAP_SPI)
+	default y if (REGMAP_I2C || REGMAP_SPI || REGMAP_MCUIO)
 	select LZO_COMPRESS
 	select LZO_DECOMPRESS
 	bool
@@ -16,3 +16,6 @@ config REGMAP_SPI
 
 config REGMAP_IRQ
 	bool
+
+config REGMAP_MCUIO
+        tristate

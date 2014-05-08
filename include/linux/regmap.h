@@ -19,6 +19,7 @@
 struct module;
 struct i2c_client;
 struct spi_device;
+struct mcuio_device;
 
 /* An enum of all the supported cache types */
 enum regcache_type {
@@ -143,6 +144,8 @@ struct regmap *regmap_init_i2c(struct i2c_client *i2c,
 			       const struct regmap_config *config);
 struct regmap *regmap_init_spi(struct spi_device *dev,
 			       const struct regmap_config *config);
+struct regmap *regmap_init_mcuio(struct mcuio_device *mdev,
+				 const struct regmap_config *config);
 
 struct regmap *devm_regmap_init(struct device *dev,
 				const struct regmap_bus *bus,
@@ -152,6 +155,8 @@ struct regmap *devm_regmap_init_i2c(struct i2c_client *i2c,
 				    const struct regmap_config *config);
 struct regmap *devm_regmap_init_spi(struct spi_device *dev,
 				    const struct regmap_config *config);
+struct regmap *devm_regmap_init_mcuio(struct mcuio_device *mdev,
+				      const struct regmap_config *config);
 
 void regmap_exit(struct regmap *map);
 int regmap_reinit_cache(struct regmap *map,
