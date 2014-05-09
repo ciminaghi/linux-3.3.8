@@ -669,6 +669,12 @@ config HID_ZYDACRON
 	---help---
 	Support for Zydacron remote control.
 
+config HID_MCUIO_JS
+        tristate "MCUIO joystick shield support"
+	depends on MCUIO
+	---help---
+	Support for mcuio joystick shield.
+
 endmenu
 
 endif # HID_SUPPORT
