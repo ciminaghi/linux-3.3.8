@@ -107,6 +107,12 @@ struct mcuio_request {
  */
 int mcuio_submit_request(struct mcuio_request *r);
 
+/*
+ * Setup a callback for an incoming request
+ *
+ * @r: pointer to corresponding request
+ */
+int mcuio_setup_cb(struct mcuio_request *r);
 
 #endif /* __KERNEL__ */
 
