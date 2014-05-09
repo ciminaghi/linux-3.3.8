@@ -71,6 +71,8 @@ typedef void (*request_cb)(struct mcuio_request *);
  * @dev: destination device
  * @func: destination function
  * @offset: offset within function address space
+ * @offset_mask: this mask is applied to incoming packets' offsets when
+ *		 looking for matching pending requests
  * @type: request type
  * @cb: pointer to callback function
  * @cb_data: callback data.
@@ -81,13 +83,14 @@ typedef void (*request_cb)(struct mcuio_request *);
  * @priv: private data. FIX THIS
  * @dont_free: this flag is !0 when request shall not be kfree'd
  * @fill: if this is !0 the resulting request packet shall have its fill data
- *        flag set
+ *	  flag set
  */
 struct mcuio_request {
 	struct mcuio_device *hc;
 	unsigned dev;
 	unsigned func;
 	unsigned offset;
+	unsigned offset_mask;
 	unsigned type;
 	request_cb cb;
 	void *cb_data;

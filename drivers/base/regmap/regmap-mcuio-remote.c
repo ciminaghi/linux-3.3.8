@@ -96,6 +96,7 @@ static int regmap_mcuio_gather_write(void *context,
 		r.dev = ctx->dev;
 		r.func = ctx->func;
 		r.offset = offset;
+		r.fill = 0;
 		r.dont_free = 1;
 		f(r.data, val);
 		ret = mcuio_submit_request(&r);
@@ -155,8 +156,10 @@ static int regmap_mcuio_read(void *context,
 		r.dev = ctx->dev;
 		r.func = ctx->func;
 		r.offset = offset;
+		r.offset_mask = 0xffff;
 		r.status = -ETIMEDOUT;
 		r.dont_free = 1;
+		r.fill = 0;
 		ret = mcuio_submit_request(&r);
 		if (ret)
 			break;
