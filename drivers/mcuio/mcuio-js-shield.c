@@ -21,6 +21,7 @@
 #include <linux/interrupt.h>
 #include <linux/gpio.h>
 #include <linux/hid.h>
+#include <linux/platform_device.h>
 
 
 #include <linux/mcuio.h>
@@ -30,6 +31,7 @@
 #include "mcuio-internal.h"
 
 #define JS_MAX_NLEDS 2
+#define LED_MAX_NAMELEN 20
 
 /* The HID report descriptor (just 4 buttons at present) */
 static char mcuio_js_report_descriptor[] = {
@@ -151,9 +153,64 @@ static int __setup_button(struct mcuio_device *mdev, struct mcuio_js_gpio *data,
 	return 0;
 }
 
+static void mcuio_js_led_work(struct work_struct *work)
+{
+	struct mcuio_js_led *led =
+		container_of(work, struct mcuio_js_led, work);
+	struct mcuio_js_gpio *gpio = led->gpio;
+
+	/* Active low gpios */
+	gpio_set_value_cansleep(gpio->gpio,
+				led->curr_brightness != LED_OFF ? 0 : 1);
+}
+
+
+static void mcuio_js_led_brightness_set(struct led_classdev *led_cdev,
+					enum led_brightness brightness)
+{
+	struct mcuio_js_led *led = container_of(led_cdev,
+						struct mcuio_js_led,
+						led);
+	led->curr_brightness = brightness;
+	schedule_work(&led->work);
+}
+
 static int __setup_led(struct mcuio_device *mdev, struct mcuio_js_gpio *data,
 		       int index)
 {
+	int ret;
+	char *n;
+
+	ret = devm_gpio_request_one(&mdev->dev, data->gpio, GPIOF_DIR_IN,
+				    "js-shield");
+	if (ret < 0)
+		return ret;
+	ret = gpio_direction_output(data->gpio, 1);
+	if (ret) {
+		dev_err(&mdev->dev,
+			"gpio%u: error setting direction to output\n",
+			data->gpio);
+		return ret;
+	}
+
+	data->led = devm_kzalloc(&mdev->dev, sizeof(*data->led), GFP_KERNEL);
+	if (!data->led)
+		return -ENOMEM;
+	n = devm_kzalloc(&mdev->dev, LED_MAX_NAMELEN, GFP_KERNEL);
+	if (!n)
+		return -ENOMEM;
+	snprintf(n, LED_MAX_NAMELEN, "mcuio-%s-%s::", dev_name(&mdev->dev),
+		 data->cfg->name);
+	data->led->gpio = data;
+	data->led->led.name = n;
+	data->led->led.brightness = LED_OFF;
+	data->led->led.max_brightness = LED_FULL;
+	data->led->led.brightness_set = mcuio_js_led_brightness_set;
+	ret = led_classdev_register(&mdev->dev, &data->led->led);
+	if (ret)
+		return ret;
+
+	INIT_WORK(&data->led->work, mcuio_js_led_work);
 	data->irq = 0;
 	data->index = index;
 	return 0;
@@ -450,11 +507,18 @@ static int mcuio_js_probe(struct mcuio_device *mdev)
 
 static int mcuio_js_remove(struct mcuio_device *mdev)
 {
+	struct mcuio_js_gpio *gpio;
 	struct mcuio_js_data *js_data = dev_get_drvdata(&mdev->dev);
 	if (!js_data) {
 		WARN_ON(1);
 		return -ENODEV;
 	}
+	list_for_each_entry(gpio, &js_data->gpios, list) {
+		if (!gpio->led)
+			continue;
+		led_classdev_unregister(&gpio->led->led);
+	}
+
 	hid_destroy_device(js_data->hid);
 	return 0;
 }
