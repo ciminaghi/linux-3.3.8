@@ -242,26 +242,6 @@ static int mcuio_js_hid_start(struct hid_device *hid)
 
 static void mcuio_js_hid_stop(struct hid_device *hid)
 {
-	struct mcuio_device *mdev = hid->driver_data;
-	struct mcuio_js_data *js_data;
-	int i;
-
-	hid_dbg(hid, "%s invoked\n", __func__);
-	if (!mdev) {
-		hid_err(hid, "%s: mdev is NULL\n", __func__);
-		return;
-	}
-	js_data = dev_get_drvdata(&mdev->dev);
-	if (!js_data) {
-		hid_err(hid, "%s: js_data is NULL\n", __func__);
-		return;
-	}
-	for (i = 0; i < ARRAY_SIZE(js_data->gpios); i++) {
-		struct mcuio_js_gpio *data = &js_data->gpios[i];
-		free_irq(data->irq, data);
-	}
-	hid_dbg(hid, "hw start ok\n");
-	return;
 }
 
 static int mcuio_js_hid_open(struct hid_device *hid)
