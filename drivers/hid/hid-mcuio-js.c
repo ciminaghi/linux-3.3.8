@@ -40,6 +40,8 @@ static void mcuio_js_hid_remove(struct hid_device *hdev)
 static const struct hid_device_id mcuio_js_hid[] = {
 	{ HID_DEVICE(BUS_VIRTUAL, MCUIO_VENDOR_DOGHUNTER,
 		     MCUIO_DEVICE_JOYSTICK_SHIELD), .driver_data = 0, },
+	{ HID_DEVICE(BUS_VIRTUAL, MCUIO_VENDOR_DOGHUNTER,
+		     MCUIO_DEVICE_LUCKY_SHIELD), .driver_data = 0, },
 	{ }
 };
 MODULE_DEVICE_TABLE(hid, mcuio_js_hid);
