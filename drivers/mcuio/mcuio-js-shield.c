@@ -31,7 +31,7 @@
 #include "mcuio-internal.h"
 
 #define JS_MAX_NLEDS 2
-#define LED_MAX_NAMELEN 20
+#define LED_MAX_NAMELEN 40
 
 /* The HID report descriptor (just 4 buttons at present) */
 static char mcuio_js_report_descriptor[] = {
@@ -180,6 +180,7 @@ static int __setup_led(struct mcuio_device *mdev, struct mcuio_js_gpio *data,
 {
 	int ret;
 	char *n;
+	const char *color;
 
 	ret = devm_gpio_request_one(&mdev->dev, data->gpio, GPIOF_DIR_IN,
 				    "js-shield");
@@ -199,8 +200,9 @@ static int __setup_led(struct mcuio_device *mdev, struct mcuio_js_gpio *data,
 	n = devm_kzalloc(&mdev->dev, LED_MAX_NAMELEN, GFP_KERNEL);
 	if (!n)
 		return -ENOMEM;
-	snprintf(n, LED_MAX_NAMELEN, "mcuio-%s-%s::", dev_name(&mdev->dev),
-		 data->cfg->name);
+	color = !strncmp(data->cfg->name, "LEDR", 4) ? "red" : "green";
+	snprintf(n, LED_MAX_NAMELEN, "mcuio-%s-%s:%s:", dev_name(&mdev->dev),
+		 data->cfg->name, color);
 	data->led->gpio = data;
 	data->led->led.name = n;
 	data->led->led.brightness = LED_OFF;
