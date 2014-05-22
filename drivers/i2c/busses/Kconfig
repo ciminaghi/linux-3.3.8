@@ -886,4 +886,10 @@ config SCx200_ACB
 	  This support is also available as a module.  If so, the module
 	  will be called scx200_acb.
 
+config I2C_MCUIO
+	tristate "MCUIO I2C driver"
+	depends on MCUIO
+	help
+	  Add support for mcuio i2c driver"
+
 endmenu
