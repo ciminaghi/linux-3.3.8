@@ -87,6 +87,7 @@ struct mcuio_js_led {
 struct mcuio_js_data {
 	struct hid_device *hid;
 	u8 cached_gpios;
+	int oled_reset_gpio;
 	struct list_head gpios;
 };
 
@@ -213,6 +214,16 @@ static int __setup_led(struct mcuio_device *mdev, struct mcuio_js_gpio *data,
 		return ret;
 
 	INIT_WORK(&data->led->work, mcuio_js_led_work);
+	data->irq = 0;
+	data->index = index;
+	return 0;
+}
+
+static int __setup_oled_reset(struct mcuio_device *mdev,
+			      struct mcuio_js_gpio *data,
+			      int index)
+{
+	data->js_data->oled_reset_gpio = data->gpio;
 	data->irq = 0;
 	data->index = index;
 	return 0;
@@ -420,6 +431,10 @@ static const struct mcuio_js_gpio_config lucky_gpios[] = {
 		.setup = __setup_led,
 	},
 	{
+		.name = "ORES",
+		.setup = __setup_oled_reset,
+	},
+	{
 		.name = NULL,
 	},
 };
@@ -438,6 +453,7 @@ static int mcuio_js_probe(struct mcuio_device *mdev)
 		dev_err(&mdev->dev, "no memory for js data structure\n");
 		return -ENOMEM;
 	}
+	js_data->oled_reset_gpio = -1;
 	INIT_LIST_HEAD(&js_data->gpios);
 	dev_dbg(&mdev->dev, "%s: device = 0x%04x\n", __func__, mdev->device);
 	if (mdev->id.device == MCUIO_DEVICE_JOYSTICK_SHIELD)
