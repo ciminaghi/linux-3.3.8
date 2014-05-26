@@ -13,7 +13,6 @@
 #include <linux/uaccess.h>
 #include <linux/of_device.h>
 #include <linux/of_gpio.h>
-#include <linux/pwm.h>
 #include <linux/delay.h>
 
 #define SSD1307FB_WIDTH			96
@@ -31,8 +30,6 @@
 struct ssd1307fb_par {
 	struct i2c_client *client;
 	struct fb_info *info;
-	struct pwm_device *pwm;
-	u32 pwm_period;
 	int reset;
 };
 
@@ -292,21 +289,10 @@ static int __devinit ssd1307fb_probe(struct i2c_client *client, const struct i2c
 		goto reset_oled_error;
 	}
 
-	par->pwm = pwm_get(&client->dev, NULL);
-	if (IS_ERR(par->pwm)) {
-		dev_err(&client->dev, "Could not get PWM from device tree!\n");
-		ret = PTR_ERR(par->pwm);
-		goto pwm_error;
-	}
-
-	par->pwm_period = pwm_get_period(par->pwm);
-
-	dev_dbg(&client->dev, "Using PWM%d with a %dns period.\n", par->pwm->pwm, par->pwm_period);
-
 	ret = register_framebuffer(info);
 	if (ret) {
 		dev_err(&client->dev, "Couldn't register the framebuffer\n");
-		goto fbreg_error;
+		goto reset_oled_error;
 	}
 
 	i2c_set_clientdata(client, info);
@@ -316,10 +302,6 @@ static int __devinit ssd1307fb_probe(struct i2c_client *client, const struct i2c
 	udelay(4);
 	gpio_set_value(par->reset, 1);
 	udelay(4);
-
-	/* Enable the PWM */
-	pwm_config(par->pwm, par->pwm_period / 2, par->pwm_period);
-	pwm_enable(par->pwm);
 
 	/* Map column 127 of the OLED to segment 0 */
 	ret = ssd1307fb_write_cmd(client, SSD1307FB_SEG_REMAP_ON);
@@ -341,10 +323,6 @@ static int __devinit ssd1307fb_probe(struct i2c_client *client, const struct i2c
 
 remap_error:
 	unregister_framebuffer(info);
-	pwm_disable(par->pwm);
-fbreg_error:
-	pwm_put(par->pwm);
-pwm_error:
 reset_oled_error:
 	fb_deferred_io_cleanup(info);
 fb_alloc_error:
@@ -355,11 +333,8 @@ fb_alloc_error:
 static int __devexit ssd1307fb_remove(struct i2c_client *client)
 {
 	struct fb_info *info = i2c_get_clientdata(client);
-	struct ssd1307fb_par *par = info->par;
 
 	unregister_framebuffer(info);
-	pwm_disable(par->pwm);
-	pwm_put(par->pwm);
 	fb_deferred_io_cleanup(info);
 	framebuffer_release(info);
 
