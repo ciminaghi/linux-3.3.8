@@ -24,7 +24,7 @@ config MCUIO_IRQ_CTRL
 	  interrupts to the MPU. If unsure say yes.
 
 config MCUIO_JS_SHIELD
-        tristate "mcuio joystick shield driver"
+	tristate "mcuio joystick shield driver"
 	depends on (MCUIO && MCUIO_IRQ_CTRL)
 	default y
 	help
