@@ -32,6 +32,7 @@ obj-$(CONFIG_SPI_FSL_SPI)		+= spi-fsl-spi.o
 obj-$(CONFIG_SPI_GPIO)			+= spi-gpio.o
 obj-$(CONFIG_SPI_GPIO_OLD)		+= spi_gpio_old.o
 obj-$(CONFIG_SPI_TTY_DS)		+= spi-tty-ds.o
+obj-$(CONFIG_SPI_TTY_PLAIN)		+= spi-tty-plain.o
 obj-$(CONFIG_SPI_IMX)			+= spi-imx.o
 obj-$(CONFIG_SPI_LM70_LLP)		+= spi-lm70llp.o
 obj-$(CONFIG_SPI_MPC512x_PSC)		+= spi-mpc512x-psc.o

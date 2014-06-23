@@ -176,6 +176,12 @@ config SPI_TTY_DS
 	help
 	  This package contains the TTY SPI driver
 
+config SPI_TTY_PLAIN
+	tristate "Plain SPI TTY Driver"
+	help
+	  This package contains a TTY SPI driver with no protocols nor
+	  interrupts.
+
 config SPI_IMX
 	tristate "Freescale i.MX SPI controllers"
 	depends on ARCH_MXC
