@@ -314,16 +314,14 @@ static int mcuio_adc_remove(struct mcuio_device *mdev)
 
 	pr_debug("removing mcuio adc %u:%u:%u\n",
 		 mdev->bus, mdev->device, mdev->fn);
+	BUG_ON(!data);
 
 	if (data->in_created)
 		in_devs_destroy(data);
 
 	device_remove_file(&mdev->dev, &dev_attr_enable);
 
-	BUG_ON(!data);
-
 	sysfs_remove_link(&hc->dev.kobj, "adc");
-	mcuio_adc_disable(data);
 
 	return 0;
 }
