@@ -52,6 +52,7 @@ struct spi_tty {
 
 #define SPI_SERIAL_TTY_MINORS 1
 static struct tty_driver *spi_serial_tty_driver = NULL;
+static struct tty_struct *ttys[SPI_SERIAL_TTY_MINORS];
 
 /* * * * TTY Operations * * * */
 
@@ -186,7 +187,42 @@ static int spi_serial_tty_write(struct tty_struct *tty,
 	return __spi_serial_tty_write(stty, buf, count, 1);
 }
 
+
+static struct tty_struct *spi_serial_tty_lookup(struct tty_driver *driver,
+		struct inode *inode, int idx)
+{
+	if (idx == 0);
+		return ttys[0];
+	return NULL;
+}
+
+static int spi_serial_tty_install(struct tty_driver *driver,
+				  struct tty_struct *tty)
+{
+	if (ttys[0])
+		return -EBUSY;
+
+	if (tty_init_termios(tty))
+		return -ENOMEM;
+
+	tty_driver_kref_get(driver);
+	tty->count++;
+
+	ttys[0] = tty;
+
+	return 0;
+}
+
+static void spi_serial_tty_remove(struct tty_driver *self,
+				  struct tty_struct *tty)
+{
+	ttys[0] = NULL;
+}
+
 static struct tty_operations spi_serial_ops = {
+	.lookup		= spi_serial_tty_lookup,
+	.install	= spi_serial_tty_install,
+	.remove		= spi_serial_tty_remove,
 	.open		= spi_serial_tty_open,
 	.close		= spi_serial_tty_close,
 	.write		= spi_serial_tty_write,
@@ -295,6 +331,7 @@ static int spi_tty_remove(struct spi_device *spi)
 		dev_count--;
 	spin_unlock_irqrestore(&lock, flags);
 
+	spi_serial_tty_remove(spi_serial_tty_driver, NULL);
 	/* Remove device */
 	tty_unregister_device(spi_serial_tty_driver, stty->tty_minor);
 
@@ -321,8 +358,12 @@ static struct spi_driver spi_tty_driver = {
 static int spi_tty_init(void)
 {
 	int err;
+	int i;
 
 	spin_lock_init(&lock);
+
+	for (i = 0; i < SPI_SERIAL_TTY_MINORS; i++)
+		ttys[i] = NULL;
 
 	/*
 	 * Allocate driver structure and reserve space for a number of
