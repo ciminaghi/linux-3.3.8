@@ -243,10 +243,11 @@ static void spi_console_write (struct console *co, const char *s,
 			      unsigned count)
 {
 	struct spi_device *spi_dev = (struct spi_device*)co->data;
-	spi_gpio_chipselect(spi_dev, 1);
 
 	if (!spi_dev)
 		return;
+
+	spi_gpio_chipselect(spi_dev, 1);
 
 	while(count) {
 		if (((*s) & 0xff) == '\n')
@@ -273,8 +274,6 @@ static int spi_gpio_setup(struct spi_device *spi)
 	if (!spicons.data)
 		spicons.data = spi;
 
-	register_console(&spicons);
-
 	if (spi->bits_per_word > 32)
 		return -EINVAL;
 
@@ -292,6 +291,9 @@ static int spi_gpio_setup(struct spi_device *spi)
 		if (!spi->controller_state && cs != SPI_GPIO_NO_CHIPSELECT)
 			gpio_free(cs);
 	}
+
+	register_console(&spicons);
+
 	return status;
 }
 
@@ -299,11 +301,12 @@ static void spi_gpio_cleanup(struct spi_device *spi)
 {
 	unsigned long	cs = (unsigned long) spi->controller_data;
 
+	unregister_console(&spicons);
+	spicons.data = NULL;
+
 	if (cs != SPI_GPIO_NO_CHIPSELECT)
 		gpio_free(cs);
 	spi_bitbang_cleanup(spi);
-
-	unregister_console(&spicons);
 }
 
 static int __devinit spi_gpio_alloc(unsigned pin, const char *label, bool is_in)
