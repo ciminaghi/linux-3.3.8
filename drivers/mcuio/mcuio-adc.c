@@ -145,7 +145,7 @@ struct attribute_group adc_in_dev_attr_group = {
 	.attrs = adc_in_dev_attrs,
 };
 
-ssize_t show_enable(struct device *dev, struct device_attribute *attr,
+static ssize_t show_enable(struct device *dev, struct device_attribute *attr,
 			char *buf)
 {
 	uint32_t en = 0;
@@ -203,7 +203,7 @@ static void in_devs_destroy(struct adc_data *data)
 	mcuio_adc_class = NULL;
 }
 
-ssize_t store_enable(struct device *dev, struct device_attribute *attr,
+static ssize_t store_enable(struct device *dev, struct device_attribute *attr,
 			 const char *buf, size_t count)
 {
 	uint32_t _en, en_new;
@@ -229,14 +229,14 @@ ssize_t store_enable(struct device *dev, struct device_attribute *attr,
 	return count;
 }
 
-ssize_t show_aref(struct device *dev, struct device_attribute *attr,
+static ssize_t show_aref(struct device *dev, struct device_attribute *attr,
 			char *buf)
 {
 	/* FIXME todo */
 	return sprintf(buf, "Not implemented yet");
 }
 
-ssize_t store_aref(struct device *dev, struct device_attribute *attr,
+static ssize_t store_aref(struct device *dev, struct device_attribute *attr,
 			 const char *buf, size_t count)
 {
 	/* FIXME todo */
