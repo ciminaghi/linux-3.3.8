@@ -299,8 +299,7 @@ static int spi_tty_probe(struct spi_device *spi)
 	pr_info("spi_poll_wq called every %u jiffies\n",
 		(unsigned)wqinterval);
 
-	if (!stty->wq)
-		stty->wq = create_singlethread_workqueue("spi_poll_wq");
+	stty->wq = create_singlethread_workqueue("spi_poll_wq");
 
 	if (stty->wq) {
 		INIT_DELAYED_WORK(&stty->work, spi_poll_work_handler);
@@ -321,6 +320,7 @@ static int spi_tty_remove(struct spi_device *spi)
 
 	cancel_delayed_work_sync(&stty->work);
 	flush_workqueue(stty->wq);
+	destroy_workqueue(stty->wq);
 
 	dev_info(&spi->dev, "%s\n", __func__);
 
