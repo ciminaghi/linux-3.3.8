@@ -9,3 +9,4 @@ obj-$(CONFIG_MCUIO_LDISC_HC) += mcuio-hc-ldisc.o
 obj-$(CONFIG_MCUIO_IRQ_CTRL) += mcuio-irq-ctrl.o
 obj-$(CONFIG_MCUIO_JS_SHIELD) += mcuio-js-shield.o
 obj-$(CONFIG_MCUIO_ADC) += mcuio-adc.o
+obj-$(CONFIG_MCUIO_PWM) += mcuio-pwm.o
