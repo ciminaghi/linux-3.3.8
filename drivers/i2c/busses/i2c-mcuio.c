@@ -2,7 +2,7 @@
  * mcuio I2c controller driver
  * Some code from drivers/i2c/busses/i2c-nomadik
  */
-#define DEBUG 1
+/* #define DEBUG 1 */
 
 #include <linux/kernel.h>
 #include <linux/module.h>
