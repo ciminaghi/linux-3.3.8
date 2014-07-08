@@ -556,15 +556,18 @@ static void __do_enum(struct kthread_work *work)
 		if (stat < 0) {
 			if (!r)
 				continue;
-			dev_err(&mdev->dev,
-				"error %d on enum of %u.%u\n",
-				r->status == -ETIMEDOUT ? r->status :
-				r->data[0], edev, efunc);
 			if (r->status == -ETIMEDOUT) {
 				/* No reply from target */
 				retry = retry == -1 ? MAX_ENUM_RETRIES :
 					retry - 1;
+				dev_dbg(&mdev->dev, "enum timeout %u.%u\n",
+					edev, efunc);
+				continue;
 			}
+			dev_err(&mdev->dev,
+				"error %d on enum of %u.%u\n",
+				r->status == -ETIMEDOUT ? r->status :
+				r->data[0], edev, efunc);
 			continue;
 		}
 		retry = -1;
