@@ -410,10 +410,9 @@ int mcuio_submit_request(struct mcuio_request *r)
 	r->cb_data = &request_complete;
 	r->status = -ETIMEDOUT;
 	ret = mcuio_hc_enqueue_request(r, 1);
-	if (!ret)
-		ret = wait_for_completion_interruptible(&request_complete);
 	if (ret)
 		return ret;
+	wait_for_completion(&request_complete);
 	return r->status;
 }
 EXPORT_SYMBOL(mcuio_submit_request);
