@@ -56,6 +56,14 @@ struct mcuio_pwm_out linino_one_out[] = {
 		.mcu_idx = 1,
 	},
 	{
+		.name = "D9",
+		.mcu_idx = 2,
+	},
+	{
+		.name = "D10",
+		.mcu_idx = 3,
+	},
+	{
 		.name = NULL,
 	}
 };
