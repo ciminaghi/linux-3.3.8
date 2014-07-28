@@ -45,7 +45,10 @@ static ssize_t pwm_period_show(struct device *child,
 			       struct device_attribute *attr,
 			       char *buf)
 {
-	const struct pwm_device *pwm = child_to_pwm_device(child);
+	struct pwm_device *pwm = child_to_pwm_device(child);
+
+	if (pwm->chip->ops->update_period)
+		pwm->chip->ops->update_period(pwm->chip, pwm);
 
 	return sprintf(buf, "%u\n", pwm->period);
 }
@@ -71,7 +74,10 @@ static ssize_t pwm_duty_cycle_show(struct device *child,
 				   struct device_attribute *attr,
 				   char *buf)
 {
-	const struct pwm_device *pwm = child_to_pwm_device(child);
+	struct pwm_device *pwm = child_to_pwm_device(child);
+
+	if (pwm->chip->ops->update_duty)
+		pwm->chip->ops->update_duty(pwm->chip, pwm);
 
 	return sprintf(buf, "%u\n", pwm->duty_cycle);
 }

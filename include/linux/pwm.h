@@ -95,20 +95,10 @@ static inline void pwm_set_period(struct pwm_device *pwm, unsigned int period)
 		pwm->period = period;
 }
 
-static inline unsigned int pwm_get_period(struct pwm_device *pwm)
-{
-	return pwm ? pwm->period : 0;
-}
-
 static inline void pwm_set_duty_cycle(struct pwm_device *pwm, unsigned int duty)
 {
 	if (pwm)
 		pwm->duty_cycle = duty;
-}
-
-static inline unsigned int pwm_get_duty_cycle(struct pwm_device *pwm)
-{
-	return pwm ? pwm->duty_cycle : 0;
 }
 
 /*
@@ -124,6 +114,8 @@ int pwm_set_polarity(struct pwm_device *pwm, enum pwm_polarity polarity);
  * @set_polarity: configure the polarity of this PWM
  * @enable: enable PWM output toggling
  * @disable: disable PWM output toggling
+ * @update_period (optional): refresh period reading from chip regs
+ * @update_duty (optional): refresh duty_cycle reading from chip regs
  * @dbg_show: optional routine to show contents in debugfs
  * @owner: helps prevent removal of modules exporting active PWMs
  */
@@ -142,6 +134,10 @@ struct pwm_ops {
 					  struct pwm_device *pwm);
 	void			(*disable)(struct pwm_chip *chip,
 					   struct pwm_device *pwm);
+	int			(*update_period)(struct pwm_chip *chip,
+					  struct pwm_device *pwm);
+	int			(*update_duty)(struct pwm_chip *chip,
+					  struct pwm_device *pwm);
 #ifdef CONFIG_DEBUG_FS
 	void			(*dbg_show)(struct pwm_chip *chip,
 					    struct seq_file *s);
@@ -167,6 +163,20 @@ struct pwm_chip {
 
 	struct pwm_device	*pwms;
 };
+
+static inline unsigned int pwm_get_period(struct pwm_device *pwm)
+{
+	if (pwm && pwm->chip->ops->update_period)
+		pwm->chip->ops->update_period(pwm->chip, pwm);
+	return pwm ? pwm->period : 0;
+}
+
+static inline unsigned int pwm_get_duty_cycle(struct pwm_device *pwm)
+{
+	if (pwm && pwm->chip->ops->update_duty)
+		pwm->chip->ops->update_duty(pwm->chip, pwm);
+	return pwm ? pwm->duty_cycle : 0;
+}
 
 #if IS_ENABLED(CONFIG_PWM)
 int pwm_set_chip_data(struct pwm_device *pwm, void *data);
