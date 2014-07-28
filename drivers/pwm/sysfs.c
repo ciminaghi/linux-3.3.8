@@ -22,6 +22,7 @@
 #include <linux/slab.h>
 #include <linux/kdev_t.h>
 #include <linux/pwm.h>
+#include <linux/module.h>
 
 struct pwm_export {
 	struct device child;
