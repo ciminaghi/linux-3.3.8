@@ -229,7 +229,7 @@ struct pwm_device *pwm_request(int pwm, const char *label)
 
 	dev = pwm_to_device(pwm);
 	if (!dev) {
-		dev = ERR_PTR(-EPROBE_DEFER);
+		dev = ERR_PTR(-EAGAIN);
 		goto out;
 	}
 
