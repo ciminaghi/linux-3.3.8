@@ -63,13 +63,38 @@ static int mcuio_pwm_set_polarity(struct pwm_chip *chip, struct pwm_device *pwm,
 
 static int mcuio_pwm_enable(struct pwm_chip *chip, struct pwm_device *pwm)
 {
-	/* FIXME TODO */
-	return -1;
+	struct mcuio_pwm_data *data = to_mcuio_pwm_data(chip);
+	int idx = pwm_idx(pwm);
+	u32 st;
+	u32 addr;
+
+	addr = 0x040 * (idx + 1) + 0x0c;
+
+	if (regmap_read(data->map, addr, &st))
+		return -EIO;
+
+	if (regmap_write(data->map, addr, st | 0x1))
+		return -EIO;
+
+	return 0;
 }
 
 static void mcuio_pwm_disable(struct pwm_chip *chip, struct pwm_device *pwm)
 {
-	/* FIXME TODO */
+	struct mcuio_pwm_data *data = to_mcuio_pwm_data(chip);
+	int idx = pwm_idx(pwm);
+	u32 st = 0;
+	u32 addr;
+
+	addr = 0x040 * (idx + 1) + 0x0c;
+
+	if (regmap_read(data->map, addr, &st))
+		dev_warn(chip->dev, "could not read current status while "
+			"disabling pwm %d\n", idx);
+
+	if (regmap_write(data->map, addr, st & ~0x1))
+		dev_warn(chip->dev, "I/O error while disabling pwm %d\n",
+			 idx);
 }
 
 static const struct pwm_ops mcuio_pwm_ops = {
