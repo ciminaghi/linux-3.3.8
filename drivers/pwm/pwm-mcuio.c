@@ -107,11 +107,39 @@ static void mcuio_pwm_disable(struct pwm_chip *chip, struct pwm_device *pwm)
 			 idx);
 }
 
+static int mcuio_pwm_update_period(struct pwm_chip *chip,
+				    struct pwm_device *pwm)
+{
+	struct mcuio_pwm_data *data = to_mcuio_pwm_data(chip);
+	int idx = pwm_idx(pwm);
+	u32 val;
+	if (regmap_read(data->map, 0x040 * (idx + 1) + 0x10, &val))
+		return -EIO;
+
+	pwm->period = val * data->ticks_ns[idx];
+	return 0;
+}
+
+static int mcuio_pwm_update_duty(struct pwm_chip *chip,
+				 struct pwm_device *pwm)
+{
+	struct mcuio_pwm_data *data = to_mcuio_pwm_data(chip);
+	int idx = pwm_idx(pwm);
+	u32 val;
+	if (regmap_read(data->map, 0x040 * (idx + 1) + 0x14, &val))
+		return -EIO;
+
+	pwm->duty_cycle = val * data->ticks_ns[idx];
+	return 0;
+}
+
 static const struct pwm_ops mcuio_pwm_ops = {
 	.config = mcuio_pwm_config,
 	.set_polarity = mcuio_pwm_set_polarity,
 	.enable = mcuio_pwm_enable,
 	.disable = mcuio_pwm_disable,
+	.update_period = mcuio_pwm_update_period,
+	.update_duty = mcuio_pwm_update_duty,
 	.owner = THIS_MODULE,
 };
 
