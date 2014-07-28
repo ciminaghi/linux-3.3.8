@@ -14,4 +14,11 @@ config PWM_SYSFS
 	bool
 	default y if SYSFS
 
+config PWM_MCUIO
+	tristate "mcuio PWM driver"
+	depends on MCUIO
+	default y
+	help
+	  Adds a driver mcuio PWM outputs (experimental)
+
 endif
