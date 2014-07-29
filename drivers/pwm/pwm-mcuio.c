@@ -203,7 +203,7 @@ static int mcuio_pwm_probe(struct mcuio_device *mdev)
 		regmap_read(data->map, 0x040 * (i + 1), (u32*)&names[i * 8]);
 		dev_dbg(&mdev->dev, "found pwm %d: %s\n", i, &names[i * 8]);
 
-		data->chip.pwms[i].label = &names[i * 8];
+		data->chip.pwms[i].name = &names[i * 8];
 
 		regmap_read(data->map, 0x040 * (i + 1) + 0x04,
 			    &data->chip.pwms[i].resolution);
