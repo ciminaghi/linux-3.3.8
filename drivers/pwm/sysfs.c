@@ -244,6 +244,10 @@ static int pwm_export_child(struct device *parent, struct pwm_device *pwm)
 		return ret;
 	}
 
+	if (pwm->name)
+		sysfs_create_link(&parent->kobj, &export->child.kobj,
+			pwm->name);
+
 	return 0;
 }
 
@@ -262,6 +266,9 @@ static int pwm_unexport_child(struct device *parent, struct pwm_device *pwm)
 	child = device_find_child(parent, pwm, pwm_unexport_match);
 	if (!child)
 		return -ENODEV;
+
+	if (pwm->name)
+		sysfs_remove_link(&parent->kobj, pwm->name);
 
 	/* for device_find_child() */
 	put_device(child);

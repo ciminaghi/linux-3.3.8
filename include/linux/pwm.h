@@ -83,6 +83,9 @@ struct pwm_device {
 	unsigned int		pwm;
 	struct pwm_chip		*chip;
 	void			*chip_data;
+	const char		*name; /* optional static name for pwm
+					  device, is used to create a symlink
+					  to pwm%d */
 
 	unsigned int		period; 	/* in nanoseconds */
 	unsigned int		duty_cycle;	/* in nanoseconds */
