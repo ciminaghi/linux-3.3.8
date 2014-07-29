@@ -164,16 +164,38 @@ static ssize_t pwm_polarity_store(struct device *child,
 	return ret ? : size;
 }
 
+static ssize_t pwm_resolution_show(struct device *child,
+				 struct device_attribute *attr,
+				 char *buf)
+{
+	const struct pwm_device *pwm = child_to_pwm_device(child);
+
+	return sprintf(buf, "%u\n", pwm->resolution);
+}
+
+static ssize_t pwm_max_show(struct device *child,
+				 struct device_attribute *attr,
+				 char *buf)
+{
+	const struct pwm_device *pwm = child_to_pwm_device(child);
+
+	return sprintf(buf, "%u\n", pwm->max);
+}
+
 static DEVICE_ATTR(period, 0644, pwm_period_show, pwm_period_store);
 static DEVICE_ATTR(duty_cycle, 0644, pwm_duty_cycle_show, pwm_duty_cycle_store);
 static DEVICE_ATTR(enable, 0644, pwm_enable_show, pwm_enable_store);
 static DEVICE_ATTR(polarity, 0644, pwm_polarity_show, pwm_polarity_store);
+static DEVICE_ATTR(resolution, 0444, pwm_resolution_show, NULL);
+static DEVICE_ATTR(max, 0444, pwm_max_show, NULL);
 
 static struct attribute *pwm_attrs[] = {
 	&dev_attr_period.attr,
 	&dev_attr_duty_cycle.attr,
 	&dev_attr_enable.attr,
 	&dev_attr_polarity.attr,
+	&dev_attr_resolution.attr,
+	&dev_attr_max.attr,
 	NULL
 };
 

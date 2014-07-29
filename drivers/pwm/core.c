@@ -192,6 +192,8 @@ int pwmchip_add(struct pwm_chip *chip)
 		pwm->chip = chip;
 		pwm->pwm = chip->base + i;
 		pwm->hwpwm = i;
+		pwm->resolution = 1;
+		pwm->max = 0xffffffff;
 
 		radix_tree_insert(&pwm_tree, pwm->pwm, pwm);
 	}

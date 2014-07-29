@@ -86,6 +86,8 @@ struct pwm_device {
 
 	unsigned int		period; 	/* in nanoseconds */
 	unsigned int		duty_cycle;	/* in nanoseconds */
+	unsigned int		resolution;	/* in nanoseconds */
+	unsigned int		max;		/* in nanoseconds */
 	enum pwm_polarity	polarity;
 };
 
