@@ -302,6 +302,9 @@ static ssize_t pwm_export_store(struct device *parent,
 	if (ret < 0)
 		pwm_put(pwm);
 
+	if (pwm->chip->ops->update_period)
+		pwm->chip->ops->update_period(pwm->chip, pwm);
+
 	return ret ? : len;
 }
 
