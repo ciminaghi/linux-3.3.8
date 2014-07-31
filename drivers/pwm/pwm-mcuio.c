@@ -79,7 +79,25 @@ done:
 static int mcuio_pwm_set_polarity(struct pwm_chip *chip, struct pwm_device *pwm,
 				  enum pwm_polarity polarity)
 {
-	return -EINVAL;
+	struct mcuio_pwm_data *data = to_mcuio_pwm_data(chip);
+	int idx = pwm_idx(pwm);
+	u32 st;
+	u32 addr;
+
+	addr = 0x040 * (idx + 1) + 0x0c;
+
+	if (regmap_read(data->map, addr, &st))
+		return -EIO;
+
+	if (polarity == PWM_POLARITY_NORMAL)
+		st &= ~(1 << 1);
+	else
+		st |= (1 << 1);
+
+	if (regmap_write(data->map, addr, st))
+		return -EIO;
+
+	return 0;
 }
 
 static int mcuio_pwm_enable(struct pwm_chip *chip, struct pwm_device *pwm)
