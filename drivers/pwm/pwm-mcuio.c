@@ -56,6 +56,7 @@ static int mcuio_pwm_config(struct pwm_chip *chip, struct pwm_device *pwm,
 {
 	struct mcuio_pwm_data *data = to_mcuio_pwm_data(chip);
 	int idx = pwm_idx(pwm);
+	uint32_t duty_ticks;
 
 	if (!CAP_CH_PER(data->capab[idx]))
 		goto set_duty;
@@ -68,8 +69,14 @@ set_duty:
 	if (!CAP_CH_DC(data->capab[idx]))
 		goto done;
 
-	if (regmap_write(data->map, 0x040 * (idx + 1) + 0x14,
-		duty_ns / pwm->resolution))
+	duty_ticks = duty_ns / pwm->resolution;
+
+	/* minimum duty_cycle is pwm->resolution; if a constant signal
+	 * is needed, consider inverting polarity and setting
+	 * duty_cycle=period */
+	if (duty_ticks > 0)
+		duty_ticks -= 1;
+	if (regmap_write(data->map, 0x040 * (idx + 1) + 0x14, duty_ticks))
 		return -EIO;
 
 done:
@@ -158,7 +165,7 @@ static int mcuio_pwm_update_duty(struct pwm_chip *chip,
 	if (regmap_read(data->map, 0x040 * (idx + 1) + 0x14, &val))
 		return -EIO;
 
-	pwm->duty_cycle = val * pwm->resolution;
+	pwm->duty_cycle = (val + 1) * pwm->resolution;
 	return 0;
 }
 
@@ -253,7 +260,7 @@ static int mcuio_pwm_probe(struct mcuio_device *mdev)
 		regmap_read(data->map, 0x040 * (i + 1) + 0x08,
 			    &max_ticks);
 
-		data->chip.pwms[i].max = max_ticks *
+		data->chip.pwms[i].max = (max_ticks + 1) *
 			data->chip.pwms[i].resolution;
 	}
 	return ret;
