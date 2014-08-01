@@ -134,3 +134,4 @@ obj-$(CONFIG_HYPERV)		+= hv/
 
 obj-$(CONFIG_PM_DEVFREQ)	+= devfreq/
 obj-$(CONFIG_MCUIO)		+= mcuio/
+obj-$(CONFIG_IIO)		+= iio/
