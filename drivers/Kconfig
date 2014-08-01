@@ -140,4 +140,6 @@ source "drivers/mcuio/Kconfig"
 
 source "drivers/pwm/Kconfig"
 
+source "drivers/iio/Kconfig"
+
 endmenu
