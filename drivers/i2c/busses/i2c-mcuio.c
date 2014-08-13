@@ -246,7 +246,7 @@ static int mcuio_simple_i2c_xfer_one(struct i2c_adapter *a,
 				     struct i2c_msg *msg)
 {
 	struct mcuio_i2c_dev *i2cd = i2c_get_adapdata(a);
-	u32 v;
+	u32 v, addr;
 	int ret, timeout;
 
 	if (!i2cd) {
@@ -277,19 +277,23 @@ static int mcuio_simple_i2c_xfer_one(struct i2c_adapter *a,
 
 	/* Write message to buffer */
 	/* FIXME: check whether regmap_raw_write works */
-	memcpy(i2cd->buf, msg->buf, msg->len);
-	i2cd->sent = 0;
 	i2cd->received = 0;
-	ret = __send_obuf(i2cd);
-	if (ret < 0) {
-		dev_err(&i2cd->mdev->dev, "error sending output buffer\n");
-		return ret;
+	i2cd->sent = 0;
+	if (!(msg->flags & I2C_M_RD)) {
+		memcpy(i2cd->buf, msg->buf, msg->len);
+		ret = __send_obuf(i2cd);
+		if (ret < 0) {
+			dev_err(&i2cd->mdev->dev,
+				"error sending output buffer\n");
+			return ret;
+		}
 	}
 
 	/* Write message length */
 	v = msg->len;
 	dev_dbg(&i2cd->mdev->dev, "writing msg len = %u\n", v);
-	ret = regmap_write(i2cd->map, I2C_MCUIO_OBUF_LEN, v);
+	addr = msg->flags & I2C_M_RD ? I2C_MCUIO_IBUF_LEN : I2C_MCUIO_OBUF_LEN;
+	ret = regmap_write(i2cd->map, addr, v);
 	if (ret < 0) {
 		dev_err(&i2cd->mdev->dev, "error writing message length\n");
 		return ret;
