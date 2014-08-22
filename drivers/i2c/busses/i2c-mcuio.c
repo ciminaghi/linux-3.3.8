@@ -510,7 +510,13 @@ static s32 mcuio_simple_smbus_xfer(struct i2c_adapter * adap, u16 addr,
 	if (ret < 0 || read_write == I2C_SMBUS_WRITE)
 		return ret;
 
-	memcpy(&data->byte, i2cd->buf.b, i2cd->ilen);
+	switch (size) {
+	case I2C_SMBUS_WORD_DATA:
+		data->word = (i2cd->buf.b[1] << 8) | (i2cd->buf.b[0]);
+		break;
+	default:
+		memcpy(&data->byte, i2cd->buf.b, i2cd->ilen);
+	}
 	return ret;
 }
 
