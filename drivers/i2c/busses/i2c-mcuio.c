@@ -181,10 +181,24 @@ static int __get_ibuf(struct mcuio_i2c_dev *i2cd)
 		dev_dbg(&i2cd->mdev->dev, "nothing in input buffer\n");
 		return 0;
 	}
+	if (i2cd->ilen == -1) {
+		u8 v;
+		/* SMBUS read block cmd, the device must tell us how many
+		   bytes have to be read
+		*/
+		stat = regmap_raw_read(i2cd->map_b, I2C_MCUIO_IBUF + t,
+				       &v, 1);
+		if (stat < 0) {
+			dev_err(&i2cd->mdev->dev, "error reading ibuf len\n");
+			return stat;
+		}
+		i2cd->ilen = v;
+		dev_dbg(&i2cd->mdev->dev, "smbus block, ilen = %d\n",
+			i2cd->ilen);
+	}
 	togo = i2cd->ilen - i2cd->received;
 	l = min(count, togo);
-	dev_dbg(&i2cd->mdev->dev, "togo = %d, %p\n", togo,
-		&i2cd->buf.dw[i2cd->received/sizeof(u32)]);
+	dev_dbg(&i2cd->mdev->dev, "togo = %d, l = %d\n", togo, l);
 	stat = regmap_raw_read(i2cd->map_b, I2C_MCUIO_IBUF + t,
 			       &i2cd->buf.b[i2cd->received], l);
 	i2cd->received += l;
@@ -460,11 +474,26 @@ static s32 mcuio_simple_smbus_xfer(struct i2c_adapter * adap, u16 addr,
 		/* smbus limit */
 		if (len < 0 || len > 32)
 			return -EINVAL;
-		/*
-		 * FIXME: CHECK mcuio DEVICE BUFFER SIZE, disable this
-		 * if bufsize < 32
-		 */
+		i2cd->buf.b[0] = command;
 		if (read_write == I2C_SMBUS_WRITE) {
+			olen = 1 + len;
+			memcpy(&i2cd->buf.b[1], &data->block[1], len);
+		} else {
+			olen = 1;
+			ilen = len;
+		}
+		ret = 0;
+		break;
+	case I2C_SMBUS_BLOCK_DATA:
+		if (read_write == I2C_SMBUS_WRITE) {
+			len = data->block[0];
+			/* smbus limit */
+			if (len < 0 || len > 32)
+				return -EINVAL;
+			/*
+			 * FIXME: CHECK mcuio DEVICE BUFFER SIZE, disable this
+			 * if bufsize < 32
+			 */
 			olen = 1 + len;
 			i2cd->buf.b[0] = command;
 			memcpy(&i2cd->buf.b[1], &data->block[1], len);
@@ -473,7 +502,8 @@ static s32 mcuio_simple_smbus_xfer(struct i2c_adapter * adap, u16 addr,
 					addr, len, command);
 		} else {
 			olen = 1;
-			ilen = len + 1;
+			/* The device tells how long the block shall be */
+			ilen = -1;
 			i2cd->buf.b[0] = command;
 			dev_dbg(&adap->dev, "i2c block data - addr 0x%02x, "
 					"read  %d bytes at 0x%02x.\n",
@@ -502,6 +532,10 @@ static s32 mcuio_simple_smbus_xfer(struct i2c_adapter * adap, u16 addr,
 	switch (size) {
 	case I2C_SMBUS_WORD_DATA:
 		data->word = (i2cd->buf.b[1] << 8) | (i2cd->buf.b[0]);
+		break;
+	case I2C_SMBUS_I2C_BLOCK_DATA:
+		data->block[0] = i2cd->ilen;
+		memcpy(&data->block[1], i2cd->buf.b, i2cd->ilen);
 		break;
 	default:
 		memcpy(&data->byte, i2cd->buf.b, i2cd->ilen);
