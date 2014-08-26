@@ -443,40 +443,11 @@ static const struct mcuio_js_gpio_config lucky_gpios[] = {
 	},
 };
 
-static int match_i2c_mcuio(struct device *dev, void *dummy)
-{
-	struct mcuio_device *mdev = to_mcuio_dev(dev);
-	return mdev->id.class == MCUIO_CLASS_I2C_CONTROLLER;
-}
-
-static int match_i2c_adap(struct device *dev, void *dummy)
-{
-	return dev->type == &i2c_adapter_type;
-}
-
 static int __setup_i2c_adapter(struct mcuio_device *mdev,
 			      struct mcuio_js_data *js_data)
 {
-	/* Look for mcuio i2c controller device */
-	struct device *hcdev = mdev->dev.parent;
-	struct device *mcuio_i2c_dev = device_find_child(hcdev,
-							 NULL,
-							 match_i2c_mcuio);
-	struct device *adap_dev;
-
-	if (!mcuio_i2c_dev) {
-		dev_err(&mdev->dev,
-			"Cannot find mcuio i2c adapter mcuio dev\n");
-		return -ENODEV;
-	}
-	/* Found, now we need the corresponding adapter ... */
-	adap_dev = device_find_child(mcuio_i2c_dev, NULL, match_i2c_adap);
-	if (!adap_dev) {
-		dev_err(&mdev->dev, "Cannot find mcuio i2c adapter\n");
-		return -ENODEV;
-	}
-	js_data->i2c_adap = to_i2c_adapter(adap_dev);
-	return 0;
+	js_data->i2c_adap = mcuio_get_i2c_adapter(mdev);
+	return js_data->i2c_adap ? 0 : -ENODEV;
 }
 
 static int __instantiate_oled(struct mcuio_device *mdev,
