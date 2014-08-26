@@ -12,4 +12,6 @@ void mcuio_put_bus(unsigned bus);
 
 struct i2c_adapter *mcuio_get_i2c_adapter(struct mcuio_device *mdev);
 
+struct mcuio_device *mcuio_bus_find_hc(int bus);
+
 #endif /* __MCUIO_INTERNAL_H__ */

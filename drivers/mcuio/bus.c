@@ -11,6 +11,7 @@
 #include <linux/device.h>
 #include <linux/slab.h>
 #include <linux/types.h>
+#include <linux/err.h>
 
 #include <linux/mcuio.h>
 #include <linux/mcuio_ids.h>
@@ -119,6 +120,19 @@ struct device_type mcuio_default_device_type = {
 	.groups = default_dev_attr_groups,
 	.release = mcuio_dev_default_release,
 };
+
+struct mcuio_device *mcuio_bus_find_hc(int bus)
+{
+	char _name[8];
+	struct device *dev;
+	sprintf(_name, "%d:0.0", bus);
+	dev = bus_find_device_by_name(&mcuio_bus_type, NULL, _name);
+	if (!dev)
+		return ERR_PTR(-ENODEV);
+
+	return container_of(dev, struct mcuio_device, dev);
+}
+EXPORT_SYMBOL_GPL(mcuio_bus_find_hc);
 
 int mcuio_device_register(struct mcuio_device *mdev,
 			  struct device_type *type,
