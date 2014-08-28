@@ -605,10 +605,6 @@ static const struct mcuio_device_id js_drv_ids[] = {
 		.vendor = MCUIO_VENDOR_DOGHUNTER,
 		.device = MCUIO_DEVICE_JOYSTICK_SHIELD,
 	},
-	{
-		.vendor = MCUIO_VENDOR_DOGHUNTER,
-		.device = MCUIO_DEVICE_LUCKY_SHIELD,
-	},
 	/* Terminator */
 	{
 		.device = MCUIO_NO_DEVICE,
