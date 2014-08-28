@@ -493,9 +493,15 @@ static int __devinit ssd1307fb_probe(struct i2c_client *client, const struct i2c
 
 	info->fbops = &ssd1307fb_ops;
 	info->fix = ssd1307fb_fix;
+	info->fix.line_length = par->width / 8;
 	info->fbdefio = &ssd1307fb_defio;
 
 	info->var = ssd1307fb_var;
+	info->var.xres = par->width;
+	info->var.xres_virtual = par->width;
+	info->var.yres = par->height;
+	info->var.yres_virtual = par->height;
+
 	info->var.red.length = 1;
 	info->var.red.offset = 0;
 	info->var.green.length = 1;
