@@ -34,5 +34,6 @@
 /* Specific devices */
 #define MCUIO_DEVICE_JOYSTICK_SHIELD 0x0001
 #define MCUIO_DEVICE_LUCKY_SHIELD    0x0002
+#define MCUIO_DEVICE_DIGITALIO_SHIELD 0x0003
 
 #endif /* __MCUIO_IDS_H__ */
