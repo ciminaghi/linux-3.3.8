@@ -37,6 +37,14 @@ config MCUIO_LUCKY_SHIELD
 	help
 	  Adds a driver for the Dog Hunter Lucky shield (experimental)
 
+config MCUIO_SHIELDS_MANUAL_PROBE
+	tristate "mcuio shields manual probe"
+	depends on (MCUIO_LUCKY_SHIELD || MCUIO_DIGITALIO_SHIELD)
+	default y
+	help
+	  Since autoprobe of mcuio shields is not implemented yet, this option
+	  makes it possible to manually register shields (experimental).
+
 config MCUIO_ADC
 	tristate "mcuio ADC driver"
 	depends on MCUIO
