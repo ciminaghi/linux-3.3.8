@@ -459,6 +459,8 @@ static int __instantiate_oled(struct mcuio_device *mdev,
 		.width = 128,
 		.height = 64,
 		.page_offset = 0,
+		.pins_config = 0x12,
+		.display_offset = 0,
 	};
 	struct i2c_board_info oled_board_info = {
 		I2C_BOARD_INFO("ssd1307fb", 0x3c),

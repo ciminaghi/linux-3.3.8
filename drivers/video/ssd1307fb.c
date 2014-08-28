@@ -53,6 +53,8 @@ struct ssd1307fb_par {
 	u32 page_offset;
 	int reset;
 	u32 width;
+	u32 display_offset;
+	u8 pins_config;
 };
 
 struct ssd1307fb_array {
@@ -324,7 +326,7 @@ static int ssd1307fb_ssd1306_init(struct ssd1307fb_par *par)
 
 	/* set display offset value */
 	ret = ssd1307fb_write_cmd(par->client, SSD1307FB_SET_DISPLAY_OFFSET);
-	ret = ssd1307fb_write_cmd(par->client, 0x20);
+	ret = ssd1307fb_write_cmd(par->client, par->display_offset);
 	if (ret < 0)
 		return ret;
 
@@ -342,7 +344,7 @@ static int ssd1307fb_ssd1306_init(struct ssd1307fb_par *par)
 
 	/* Set COM pins configuration */
 	ret = ssd1307fb_write_cmd(par->client, SSD1307FB_SET_COM_PINS_CONFIG);
-	ret = ret & ssd1307fb_write_cmd(par->client, 0x22);
+	ret = ret & ssd1307fb_write_cmd(par->client, par->pins_config);
 	if (ret < 0)
 		return ret;
 
@@ -455,6 +457,9 @@ static int __devinit ssd1307fb_probe(struct i2c_client *client, const struct i2c
 	par->reset = plat ? plat->reset_gpio :
 		of_get_named_gpio(client->dev.of_node,
 				  "reset-gpios", 0);
+
+	par->pins_config = plat ? plat->pins_config : 0x22;
+	par->display_offset = plat ? plat->display_offset : 0x20;
 
 	if (!gpio_is_valid(par->reset)) {
 		ret = -EINVAL;

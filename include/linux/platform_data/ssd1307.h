@@ -21,6 +21,8 @@ struct ssd1307_platform_data {
 	u32 width;
 	u32 height;
 	u32 page_offset;
+	u32 display_offset;
+	u8 pins_config;
 };
 
 #endif /* _SSD1307_H */
