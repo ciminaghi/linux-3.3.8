@@ -207,12 +207,14 @@ static int mcuio_gpio_irq_set_type(struct irq_data *d, unsigned int flow_type)
 {
 	u8 v = 0;
 	unsigned int t = flow_type & IRQF_TRIGGER_MASK;
-	if ((t & IRQF_TRIGGER_HIGH) || (t & IRQF_TRIGGER_LOW))
-		return -EINVAL;
 	if (t & IRQF_TRIGGER_RISING)
 		v |= 1;
 	if (t & IRQF_TRIGGER_FALLING)
 		v |= 2;
+	if (t & IRQF_TRIGGER_HIGH)
+		v |= 4;
+	if (t & IRQF_TRIGGER_LOW)
+		v |= 8;
 	return __mcuio_gpio_set_irq_flags(d, v, 0x7f);
 }
 
