@@ -506,15 +506,16 @@ static s32 mcuio_simple_smbus_xfer(struct i2c_adapter * adap, u16 addr,
 			ilen = -1;
 			i2cd->buf.b[0] = command;
 			dev_dbg(&adap->dev, "i2c block data - addr 0x%02x, "
-					"read  %d bytes at 0x%02x.\n",
-					addr, len, command);
+					"read  ? bytes at 0x%02x.\n",
+					addr, command);
 		}
 
 		ret = 0;
 		break;
 
 	default:
-		dev_dbg(&adap->dev, "Unsupported I2C/SMBus command\n");
+		dev_dbg(&adap->dev, "Unsupported I2C/SMBus command 0x%08x\n",
+			size);
 		ret = -EOPNOTSUPP;
 		break;
 	} /* switch (size) */
