@@ -519,6 +519,9 @@ static s32 mcuio_simple_smbus_xfer(struct i2c_adapter * adap, u16 addr,
 		break;
 	} /* switch (size) */
 
+	if (ret < 0)
+		return ret;
+
 	i2cd->olen = olen;
 	i2cd->ilen = ilen;
 	i2cd->flags = read_write == I2C_SMBUS_READ ? I2C_M_RD : 0;
