@@ -25,8 +25,10 @@
 
 /* ASCII char 0x5 is 'enquiry' and is here used to poll MCU */
 #define SPI_TTY_ENQUIRY 0x5
-#define SPI_TTY_MSG_LEN 16
-#define SPI_TTY_FREQ_HZ 38400
+#define SPI_TTY_ENQ_INT_MS 200
+#define SPI_TTY_MSG_LEN 64
+#define SPI_TTY_FREQ_HZ_RX 38400
+#define SPI_TTY_FREQ_HZ_TX 115200
 static unsigned int dev_count = 0;
 static spinlock_t lock;
 
@@ -44,7 +46,7 @@ struct spi_tty {
 	struct device *tty_dev;
 	struct tty_port port;
 
-	char enq_buf[SPI_TTY_MSG_LEN];
+	char enq_buf[SPI_TTY_MSG_LEN + 1];
 	struct workqueue_struct *wq;
 	struct delayed_work work;
 	struct mutex mtx;
@@ -117,30 +119,37 @@ static int __spi_serial_tty_write(struct spi_tty *stty,
 		return 0;
 	}
 
-	rx_buf = kmalloc(SPI_TTY_MSG_LEN, GFP_KERNEL | GFP_ATOMIC);
-	if (!rx_buf)
+	mutex_lock(&stty->mtx);
+
+	if (discard_rx)
+		len = min(SPI_TTY_MSG_LEN, count);
+	else
+		len = count;
+
+	rx_buf = kzalloc(len, GFP_KERNEL | GFP_ATOMIC);
+	if (!rx_buf) {
+		mutex_unlock(&stty->mtx);
 		return -ENOMEM;
-	memset(rx_buf, 0, SPI_TTY_MSG_LEN);
+	}
 
 	m = kmalloc(sizeof(struct spi_message), GFP_KERNEL | GFP_ATOMIC);
-
-	if (!m)
+	if (!m) {
+		mutex_unlock(&stty->mtx);
 		return -ENOMEM;
-
-	len = min(SPI_TTY_MSG_LEN, count);
+	}
 
 	spi_message_init(m);
 
 	t = kzalloc(sizeof(struct spi_transfer), GFP_KERNEL | GFP_ATOMIC);
-	if (!t)
+	if (!t) {
+		mutex_unlock(&stty->mtx);
 		return -ENOMEM;
+	}
 
 	t->len = len;
 	t->tx_buf = buf;
 	t->rx_buf = rx_buf;
-	t->speed_hz = SPI_TTY_FREQ_HZ;
-
-	mutex_lock(&stty->mtx);
+	t->speed_hz = discard_rx ? SPI_TTY_FREQ_HZ_TX : SPI_TTY_FREQ_HZ_RX;
 
 	spi_message_add_tail(t, m);
 
@@ -161,18 +170,17 @@ static int __spi_serial_tty_write(struct spi_tty *stty,
 	for (i = 1; i < len; i++) {
 		if (rx_buf[i] == '\0')
 			continue;
-
 		tty_insert_flip_char(tty, rx_buf[i], TTY_NORMAL);
 	}
 	tty_flip_buffer_push(tty);
 
 end:
-	mutex_unlock(&stty->mtx);
 
 	kfree(t);
 	kfree(m);
 	kfree(rx_buf);
 
+	mutex_unlock(&stty->mtx);
 	return len;
 
 }
@@ -243,7 +251,7 @@ static void spi_poll_work_handler(struct work_struct *w)
 
 	stty = container_of(to_delayed_work(w), struct spi_tty, work);
 
-	__spi_serial_tty_write(stty, stty->enq_buf, SPI_TTY_MSG_LEN, 0);
+	__spi_serial_tty_write(stty, stty->enq_buf, sizeof(stty->enq_buf), 0);
 	if ((!delayed_work_pending(&stty->work)))
 		queue_delayed_work(stty->wq, &stty->work, wqinterval);
 }
@@ -255,7 +263,6 @@ static int spi_tty_probe(struct spi_device *spi)
 	struct spi_tty *stty;
 	int err = 0;
 	unsigned long flags;
-	int i;
 
 	if (dev_count >= SPI_SERIAL_TTY_MINORS)
 		return -ENOMEM;
@@ -268,8 +275,8 @@ static int spi_tty_probe(struct spi_device *spi)
 	spi_set_drvdata(spi, stty);
 	stty->spi = spi;
 
-	for (i = 0; i < SPI_TTY_MSG_LEN; i++)
-		stty->enq_buf[i] = SPI_TTY_ENQUIRY;
+	memset(stty->enq_buf, SPI_TTY_ENQUIRY, sizeof(stty->enq_buf));
+	stty->enq_buf[sizeof(stty->enq_buf) - 1] = 0x00;
 
 	mutex_init(&stty->mtx);
 
@@ -295,7 +302,7 @@ static int spi_tty_probe(struct spi_device *spi)
 	spin_unlock_irqrestore(&lock, flags);
 
 	/* start workqueue for enquiry poll */
-	wqinterval = msecs_to_jiffies(100);
+	wqinterval = msecs_to_jiffies(SPI_TTY_ENQ_INT_MS);
 	pr_info("spi_poll_wq called every %u jiffies\n",
 		(unsigned)wqinterval);
 
