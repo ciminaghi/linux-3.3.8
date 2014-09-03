@@ -39,13 +39,13 @@ static unsigned int pca9555_base = 200;
 static unsigned short pca9555_addr = 0x20;
 static unsigned short mpl3115_addr = 0x60;
 static unsigned short mag3110_addr = 0x0e;
-static unsigned short hih6130_addr = 0x27;
+static unsigned short sht21_addr = 0x40;
 static unsigned short ssd1307_addr = 0x3c;
 module_param(pca9555_base, uint, 0444);
 module_param(pca9555_addr, ushort, 0444);
 module_param(mpl3115_addr, ushort, 0444);
 module_param(mag3110_addr, ushort, 0444);
-module_param(hih6130_addr, ushort, 0444);
+module_param(sht21_addr, ushort, 0444);
 module_param(ssd1307_addr, ushort, 0444);
 
 struct ssd1307_platform_data ssd1307_plat = {
@@ -63,7 +63,7 @@ static struct mcuio_shld_i2c_info i2c_lst[] = {
 	MCUIO_SHLD_I2C_DEV("pca9555", &pca9555_addr, &pca9555_plat),
 	MCUIO_SHLD_I2C_DEV("mpl3115", &mpl3115_addr, NULL),
 	MCUIO_SHLD_I2C_DEV("mag3110", &mag3110_addr, NULL),
-	MCUIO_SHLD_I2C_DEV("hih6130", &hih6130_addr, NULL),
+	MCUIO_SHLD_I2C_DEV("sht21", &sht21_addr, NULL),
 	MCUIO_SHLD_I2C_DEV("ssd1307fb", &ssd1307_addr, &ssd1307_plat),
 };
 
