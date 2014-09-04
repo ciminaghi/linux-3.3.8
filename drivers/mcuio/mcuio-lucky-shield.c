@@ -69,7 +69,6 @@ static struct mcuio_shld_i2c_info i2c_lst[] = {
 
 static int mcuio_lucky_probe(struct mcuio_device *mdev)
 {
-	struct i2c_board_info info;
 	struct mcuio_shld_i2c_info *i;
 	int cnt;
 
@@ -100,16 +99,13 @@ static int mcuio_lucky_probe(struct mcuio_device *mdev)
 	/* Register all devices in Lucky shield */
 	for (cnt = 0; cnt < data->i2c_cnt; cnt++) {
 		i = &data->i2c_info[cnt];
-		memset(&info, 0, sizeof(info));
-		strcpy(info.type, i->type);
-		info.addr = *i->paddr;
-		info.platform_data = i->platform_data;
+		i->info.addr = *i->paddr;
 
-		i->i2c_client = i2c_new_device(data->i2c_adap, &info);
+		i->i2c_client = i2c_new_device(data->i2c_adap, &i->info);
 
 		if (!i->i2c_client)
 			dev_err(&mdev->dev,
-				"i2c_new_device %s failed\n", i->type);
+				"i2c_new_device %s failed\n", i->info.type);
 	}
 
 	dev_dbg(&mdev->dev, "%s returns ok\n", __func__);
