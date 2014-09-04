@@ -100,6 +100,7 @@ static int mcuio_lucky_probe(struct mcuio_device *mdev)
 	/* Register all devices in Lucky shield */
 	for (cnt = 0; cnt < data->i2c_cnt; cnt++) {
 		i = &data->i2c_info[cnt];
+		memset(&info, 0, sizeof(info));
 		strcpy(info.type, i->type);
 		info.addr = *i->paddr;
 		info.platform_data = i->platform_data;
