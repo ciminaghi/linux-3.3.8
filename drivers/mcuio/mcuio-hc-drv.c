@@ -127,14 +127,13 @@ static struct mcuio_request *mcuio_alloc_request(struct mcuio_device *mdev)
 }
 
 
-static void mcuio_free_request(struct mcuio_request *r)
+static void __dequeue_request(struct mcuio_request *r)
 {
 	struct mcuio_hc_data *data;
 	data = dev_get_drvdata(&r->hc->dev);
 	mutex_lock(&data->lock);
 	list_del(&r->list);
 	mutex_unlock(&data->lock);
-	devm_kfree(&r->hc->dev, r);
 }
 
 
@@ -179,7 +178,7 @@ static void __request_timeout(struct work_struct *work)
 		container_of(work, struct mcuio_request, to_work.work);
 	if (r->cb)
 		r->cb(r);
-	mcuio_free_request(r);
+	__dequeue_request(r);
 }
 
 static int __write_message(struct regmap *map, const u32 *ptr, int count)
@@ -355,7 +354,7 @@ static int __receive_messages(void *__data)
 			__copy_data(r->data, p, 1);
 		if (r->cb)
 			r->cb(r);
-		mcuio_free_request(r);
+		__dequeue_request(r);
 	}
 	return 0;
 }
@@ -677,7 +676,7 @@ static void __cleanup_outstanding_requests(struct mcuio_hc_data *data)
 		cancel_delayed_work_sync(&r->to_work);
 		if (r->cb)
 			r->cb(r);
-		mcuio_free_request(r);
+		__dequeue_request(r);
 	}
 }
 
