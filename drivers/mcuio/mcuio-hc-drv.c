@@ -171,9 +171,6 @@ static struct mcuio_request *__make_request(struct mcuio_device *mdev,
 	out->status = -ETIMEDOUT;
 	out->cb = cb;
 	out->fill = fill;
-	/* HACK: don't free mcuio_request, as mcuio_free is called too
-	 * early and causes kernel oops in __do_enum */
-	out->dont_free = 1;
 	return out;
 }
 
