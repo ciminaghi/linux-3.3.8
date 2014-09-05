@@ -83,6 +83,7 @@ typedef void (*request_cb)(struct mcuio_request *);
  * @priv: private data. FIX THIS
  * @fill: if this is !0 the resulting request packet shall have its fill data
  *	  flag set
+ * @release: pointer to memory release function
  */
 struct mcuio_request {
 	struct mcuio_device *hc;
@@ -99,6 +100,7 @@ struct mcuio_request {
 	struct delayed_work to_work;
 	void *priv;
 	int fill;
+	void (*release)(struct mcuio_request *);
 };
 
 /*
@@ -114,6 +116,29 @@ int mcuio_submit_request(struct mcuio_request *r);
  * @r: pointer to corresponding request
  */
 int mcuio_setup_cb(struct mcuio_request *r);
+
+/*
+ * Fill an mcuio request
+ */
+void mcuio_init_request(struct mcuio_request *r,
+			struct mcuio_device *mdev,
+			unsigned dev, unsigned func,
+			unsigned type,
+			int fill,
+			unsigned offset,
+			unsigned offset_mask,
+			request_cb cb);
+
+/*
+ * Dynamically allocate an mcuio request
+ */
+struct mcuio_request *mcuio_make_request(struct mcuio_device *mdev,
+					 unsigned dev, unsigned func,
+					 unsigned type,
+					 int fill,
+					 unsigned offset,
+					 unsigned offset_mask,
+					 request_cb cb);
 
 #endif /* __KERNEL__ */
 
