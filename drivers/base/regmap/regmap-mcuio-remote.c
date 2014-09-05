@@ -79,7 +79,6 @@ static int regmap_mcuio_gather_write(void *context,
 			r.fill = 1;
 			sz = sizeof(u64);
 		}
-		r.dont_free = 1;
 		memcpy(r.data, val, sz);
 		ret = mcuio_submit_request(&r);
 		if (ret == -ETIMEDOUT) {
@@ -142,7 +141,6 @@ static int regmap_mcuio_read(void *context,
 		r.offset = offset;
 		r.offset_mask = 0xffff;
 		r.status = -ETIMEDOUT;
-		r.dont_free = 1;
 		if (val_size >= sizeof(u64)) {
 			r.fill = 1;
 			sz = sizeof(u64);

@@ -134,8 +134,7 @@ static void mcuio_free_request(struct mcuio_request *r)
 	mutex_lock(&data->lock);
 	list_del(&r->list);
 	mutex_unlock(&data->lock);
-	if (!r->dont_free)
-		devm_kfree(&r->hc->dev, r);
+	devm_kfree(&r->hc->dev, r);
 }
 
 
@@ -231,7 +230,6 @@ static int __do_request(struct mcuio_hc_data *data)
 
 regmap_error:
 	cancel_delayed_work_sync(&r->to_work);
-	mcuio_free_request(r);
 	return -EIO;
 }
 

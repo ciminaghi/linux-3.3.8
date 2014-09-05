@@ -81,7 +81,6 @@ typedef void (*request_cb)(struct mcuio_request *);
  * @list: used for enqueueing requests
  * @to_work: delayed_work struct for request timeout management
  * @priv: private data. FIX THIS
- * @dont_free: this flag is !0 when request shall not be kfree'd
  * @fill: if this is !0 the resulting request packet shall have its fill data
  *	  flag set
  */
@@ -99,7 +98,6 @@ struct mcuio_request {
 	struct list_head list;
 	struct delayed_work to_work;
 	void *priv;
-	int dont_free;
 	int fill;
 };
 
