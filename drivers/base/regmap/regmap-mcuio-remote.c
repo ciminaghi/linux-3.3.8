@@ -67,19 +67,15 @@ static int regmap_mcuio_gather_write(void *context,
 	}
 
 	while (val_size && retries) {
-		int sz = ctx->val_bytes;
+		int sz = ctx->val_bytes, fill = 0;
 
-		r.type = t;
-		r.hc = ctx->hc;
-		r.dev = ctx->dev;
-		r.func = ctx->func;
-		r.offset = offset;
-		r.fill = 0;
 		if (val_size >= sizeof(u64)) {
-			r.fill = 1;
+			fill = 1;
 			sz = sizeof(u64);
 		}
 		memcpy(r.data, val, sz);
+		mcuio_init_request(&r, ctx->hc, ctx->dev, ctx->func,
+				   t, fill, offset, 0xffff);
 		ret = mcuio_submit_request(&r);
 		if (ret == -ETIMEDOUT) {
 			retries--;
@@ -132,20 +128,15 @@ static int regmap_mcuio_read(void *context,
 		return -EINVAL;
 	}
 	while (val_size && retries) {
-		int sz = ctx->val_bytes;
+		int sz = ctx->val_bytes, fill = 0;
 
-		r.type = t;
-		r.hc = ctx->hc;
-		r.dev = ctx->dev;
-		r.func = ctx->func;
-		r.offset = offset;
-		r.offset_mask = 0xffff;
-		r.status = -ETIMEDOUT;
+		fill = 0;
 		if (val_size >= sizeof(u64)) {
-			r.fill = 1;
+			fill = 1;
 			sz = sizeof(u64);
 		}
-		r.fill = 0;
+		mcuio_init_request(&r, ctx->hc, ctx->dev, ctx->func, t,
+				   fill, offset, 0xffff);
 		ret = mcuio_submit_request(&r);
 		if (ret == -ETIMEDOUT) {
 			retries--;

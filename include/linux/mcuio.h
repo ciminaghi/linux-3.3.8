@@ -118,7 +118,7 @@ int mcuio_submit_request(struct mcuio_request *r);
 int mcuio_setup_cb(struct mcuio_request *r);
 
 /*
- * Fill an mcuio request
+ * Fill a non-dynamically allocated mcuio request
  */
 void mcuio_init_request(struct mcuio_request *r,
 			struct mcuio_device *mdev,
@@ -126,19 +126,17 @@ void mcuio_init_request(struct mcuio_request *r,
 			unsigned type,
 			int fill,
 			unsigned offset,
-			unsigned offset_mask,
-			request_cb cb);
+			unsigned offset_mask);
 
 /*
- * Dynamically allocate an mcuio request
+ * Dynamically allocate an mcuio request and initialize it
  */
 struct mcuio_request *mcuio_make_request(struct mcuio_device *mdev,
 					 unsigned dev, unsigned func,
 					 unsigned type,
 					 int fill,
 					 unsigned offset,
-					 unsigned offset_mask,
-					 request_cb cb);
+					 unsigned offset_mask);
 
 #endif /* __KERNEL__ */
 

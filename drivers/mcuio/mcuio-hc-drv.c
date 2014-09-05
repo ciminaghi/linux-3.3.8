@@ -117,12 +117,18 @@ static int __copy_data(uint32_t *addr, struct mcuio_packet *p, int ntoh)
 		  ntoh ? mcuio_packet_is_read(p) : !mcuio_packet_is_read(p));
 }
 
+static void __free_request(struct mcuio_request *r)
+{
+	devm_kfree(&r->hc->dev, r);
+}
+
 static struct mcuio_request *mcuio_alloc_request(struct mcuio_device *mdev)
 {
 	struct mcuio_request *out = devm_kzalloc(&mdev->dev, sizeof(*out),
 						 GFP_KERNEL);
 	if (!out)
 		dev_err(&mdev->dev, "not enough memory for mcuio request\n");
+	out->release = __free_request;
 	return out;
 }
 
@@ -149,28 +155,52 @@ static void __request_to_packet(struct mcuio_request *r, struct mcuio_packet *p)
 	__copy_data(r->data, p, 0);
 }
 
-static struct mcuio_request *__make_request(struct mcuio_device *mdev,
-					    unsigned dev, unsigned func,
-					    unsigned type,
-					    int fill,
-					    unsigned offset,
-					    unsigned offset_mask,
-					    ___request_cb cb)
+static void __init_request(struct mcuio_request *r,
+			   struct mcuio_device *mdev,
+			   unsigned dev, unsigned func,
+			   unsigned type,
+			   int fill,
+			   unsigned offset,
+			   unsigned offset_mask)
+{
+	r->hc = mdev;
+	r->dev = dev;
+	r->func = func;
+	r->type = type;
+	r->offset = offset;
+	r->offset_mask = offset_mask;
+	r->status = -ETIMEDOUT;
+	r->fill = fill;
+}
+
+struct mcuio_request *mcuio_make_request(struct mcuio_device *mdev,
+					 unsigned dev, unsigned func,
+					 unsigned type,
+					 int fill,
+					 unsigned offset,
+					 unsigned offset_mask)
 {
 	struct mcuio_request *out = mcuio_alloc_request(mdev);
 	if (!out)
 		return NULL;
-	out->hc = mdev;
-	out->dev = dev;
-	out->func = func;
-	out->type = type;
-	out->offset = offset;
-	out->offset_mask = offset_mask;
-	out->status = -ETIMEDOUT;
-	out->cb = cb;
-	out->fill = fill;
+	__init_request(out, mdev, dev, func, type, fill, offset,
+		       offset_mask);
 	return out;
 }
+EXPORT_SYMBOL(mcuio_make_request);
+
+void mcuio_init_request(struct mcuio_request *r,
+			struct mcuio_device *mdev,
+			unsigned dev, unsigned func,
+			unsigned type,
+			int fill,
+			unsigned offset,
+			unsigned offset_mask)
+{
+	__init_request(r, mdev, dev, func, type, fill, offset, offset_mask);
+	r->release = NULL;
+}
+EXPORT_SYMBOL(mcuio_init_request);
 
 static void __request_timeout(struct work_struct *work)
 {
@@ -446,8 +476,8 @@ static int __do_one_enum(struct mcuio_device *mdev, unsigned edev,
 	struct mcuio_request *r;
 	int ret;
 
-	r = __make_request(mdev, edev, efunc,
-			   mcuio_type_rddw, 1, 0, 0xffff, NULL);
+	r = mcuio_make_request(mdev, edev, efunc,
+			       mcuio_type_rddw, 1, 0, 0xffff);
 	if (!r) {
 		*out = NULL;
 		return -ENOMEM;
