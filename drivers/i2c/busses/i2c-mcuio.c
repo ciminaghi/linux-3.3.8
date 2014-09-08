@@ -571,6 +571,7 @@ static const struct regmap_config mcuio_i2c_regmap_config_dw = {
 	.val_bits = 32,
 	.max_register = 0x240,
 	.cache_type = REGCACHE_NONE,
+	.name = "mcuio-i2c-dw",
 };
 
 static const struct regmap_config mcuio_i2c_regmap_config_b = {
@@ -578,6 +579,7 @@ static const struct regmap_config mcuio_i2c_regmap_config_b = {
 	.val_bits = 8,
 	.max_register = 0x240,
 	.cache_type = REGCACHE_NONE,
+	.name = "mcuio=i2c-b",
 };
 
 static int mcuio_simple_i2c_probe(struct mcuio_device *mdev)
