@@ -207,8 +207,8 @@ static struct mcuio_soft_hc *__setup_shc(const struct mcuio_soft_hc_ops *ops,
 }
 
 static struct mcuio_device_id default_soft_hc_id = {
-	.device = 0,
-	.vendor = 0,
+	.device = MCUIO_DEVICE_SOFT_HC,
+	.vendor = MCUIO_VENDOR_DOGHUNTER,
 	.class = MCUIO_CLASS_SOFT_HOST_CONTROLLER,
 };
 
