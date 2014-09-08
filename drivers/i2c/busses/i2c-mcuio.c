@@ -55,7 +55,6 @@ struct mcuio_i2c_dev {
 	struct i2c_adapter adapter;
 	struct mcuio_device *mdev;
 	struct regmap *map_dw;
-	struct regmap *map_w;
 	struct regmap *map_b;
 	struct completion xfer_complete;
 	int xfer_status;
@@ -574,13 +573,6 @@ static const struct regmap_config mcuio_i2c_regmap_config_dw = {
 	.cache_type = REGCACHE_NONE,
 };
 
-static const struct regmap_config mcuio_i2c_regmap_config_w = {
-	.reg_bits = 32,
-	.val_bits = 16,
-	.max_register = 0x240,
-	.cache_type = REGCACHE_NONE,
-};
-
 static const struct regmap_config mcuio_i2c_regmap_config_b = {
 	.reg_bits = 32,
 	.val_bits = 8,
@@ -604,12 +596,6 @@ static int mcuio_simple_i2c_probe(struct mcuio_device *mdev)
 	if (IS_ERR(i2cd->map_dw)) {
 		dev_err(&mdev->dev, "cannot setup regmap (dw) for device\n");
 		return PTR_ERR(i2cd->map_dw);
-	}
-	i2cd->map_w = devm_regmap_init_mcuio(mdev,
-					     &mcuio_i2c_regmap_config_w);
-	if (IS_ERR(i2cd->map_w)) {
-		dev_err(&mdev->dev, "cannot setup regmap (w) for device\n");
-		return PTR_ERR(i2cd->map_w);
 	}
 	i2cd->map_b = devm_regmap_init_mcuio(mdev,
 					     &mcuio_i2c_regmap_config_b);
