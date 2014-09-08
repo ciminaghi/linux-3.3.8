@@ -138,6 +138,15 @@ struct mcuio_request *mcuio_make_request(struct mcuio_device *mdev,
 					 unsigned offset,
 					 unsigned offset_mask);
 
+/*
+ * Free an mcuio request
+ */
+static inline void mcuio_free_request(struct mcuio_request *r)
+{
+	if (r->release)
+		r->release(r);
+}
+
 #endif /* __KERNEL__ */
 
 #endif /* __MCUIO_H__ */

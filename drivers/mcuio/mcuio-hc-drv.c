@@ -594,6 +594,7 @@ static void __do_enum(struct kthread_work *work)
 				"error %d on enum of %u.%u\n",
 				r->status == -ETIMEDOUT ? r->status :
 				r->data[0], edev, efunc);
+			mcuio_free_request(r);
 			continue;
 		}
 		retry = -1;
@@ -605,6 +606,7 @@ static void __do_enum(struct kthread_work *work)
 		if (__is_irq_controller(d) || irq_controller_found) {
 			irq_controller_found = 1;
 			__register_device(r);
+			mcuio_free_request(r);
 			continue;
 		}
 		e = devm_kzalloc(&r->hc->dev, sizeof(*e), GFP_KERNEL);
@@ -613,6 +615,7 @@ static void __do_enum(struct kthread_work *work)
 			continue;
 		}
 		memcpy(&e->r, r, sizeof(*r));
+		mcuio_free_request(r);
 		list_add_tail(&e->list, &data->to_be_registered);
 	}
 	/*
