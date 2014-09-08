@@ -37,7 +37,7 @@ static int regmap_mcuio_gather_write(void *context,
 	struct mcuio_request r;
 	u32 offset;
 	unsigned t;
-	int ret;
+	int ret = 0;
 	int retries = MAX_RETRIES;
 
 	BUG_ON(reg_size != 4);
@@ -105,7 +105,7 @@ static int regmap_mcuio_read(void *context,
 	struct regmap_mcuio_context *ctx = context;
 	struct mcuio_request r;
 	u32 offset = *(u32 *)reg;
-	int ret;
+	int ret = 0;
 	unsigned t;
 	int retries = MAX_RETRIES;
 
