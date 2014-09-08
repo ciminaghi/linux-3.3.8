@@ -21,8 +21,8 @@
 #include "mcuio-internal.h"
 
 static struct mcuio_device_id default_hc_id = {
-	.device = 0,
-	.vendor = 0,
+	.device = MCUIO_DEVICE_GENERIC_HC,
+	.vendor = MCUIO_VENDOR_DOGHUNTER,
 	.class = MCUIO_CLASS_HOST_CONTROLLER,
 };
 
