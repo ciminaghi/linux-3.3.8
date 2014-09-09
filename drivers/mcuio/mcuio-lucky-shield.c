@@ -113,6 +113,8 @@ static int mcuio_lucky_probe(struct mcuio_device *mdev)
 				"i2c_new_device %s failed\n", i->info.type);
 	}
 
+	put_device(&data->i2c_adap->dev);
+
 	dev_dbg(&mdev->dev, "%s returns ok\n", __func__);
 
 	return 0;
