@@ -60,11 +60,11 @@ struct ssd1307_platform_data ssd1307_plat = {
 static struct pca953x_platform_data pca9555_plat;
 
 static struct mcuio_shld_i2c_info i2c_lst[] = {
-	MCUIO_SHLD_I2C_DEV("pca9555", &pca9555_addr, &pca9555_plat),
-	MCUIO_SHLD_I2C_DEV("mpl3115", &mpl3115_addr, NULL),
-	MCUIO_SHLD_I2C_DEV("mag3110", &mag3110_addr, NULL),
-	MCUIO_SHLD_I2C_DEV("sht21", &sht21_addr, NULL),
-	MCUIO_SHLD_I2C_DEV("ssd1307fb", &ssd1307_addr, &ssd1307_plat),
+	MCUIO_SHLD_I2C_DEV("pca9555", &pca9555_addr, &pca9555_plat, 122),
+	MCUIO_SHLD_I2C_DEV("mpl3115", &mpl3115_addr, NULL, -1),
+	MCUIO_SHLD_I2C_DEV("mag3110", &mag3110_addr, NULL, -1),
+	MCUIO_SHLD_I2C_DEV("sht21", &sht21_addr, NULL, -1),
+	MCUIO_SHLD_I2C_DEV("ssd1307fb", &ssd1307_addr, &ssd1307_plat, -1),
 };
 
 static int mcuio_lucky_probe(struct mcuio_device *mdev)
@@ -100,6 +100,8 @@ static int mcuio_lucky_probe(struct mcuio_device *mdev)
 	for (cnt = 0; cnt < data->i2c_cnt; cnt++) {
 		i = &data->i2c_info[cnt];
 		i->info.addr = *i->paddr;
+		i->info.irq = (i->gpio_irq >= 0) ?
+			gpio_to_irq(i->gpio_irq) : 0;
 
 		i->i2c_client = i2c_new_device(data->i2c_adap, &i->info);
 
