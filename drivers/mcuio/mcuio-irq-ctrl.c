@@ -71,11 +71,6 @@ static irqreturn_t irq_ctrl_irq_handler(int irq, void *__data)
 	for (i = 0; i < 32; i++)
 		if (status & (1 << i))
 			handle_nested_irq(priv->base_irq + i);
-	dev_dbg(&mdev->dev, "%s: handled, unmasking\n", __func__);
-	stat = regmap_write(priv->map, UNMASK_OFFSET, status);
-	if (stat < 0)
-		dev_err(&mdev->dev, "error unmasking irqs\n");
-	dev_dbg(&mdev->dev, "%s: unmasked\n", __func__);
 	return IRQ_HANDLED;
 }
 
