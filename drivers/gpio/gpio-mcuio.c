@@ -33,6 +33,9 @@ struct mcuio_gpio {
 	int			irq_base;
 	u32			out[2];
 	char			label[20];
+	struct			work_struct irq_work;
+	int			irq_work_pending;
+	uint32_t		status[2];
 };
 
 static int mcuio_gpio_get(struct gpio_chip *chip, unsigned offset)
@@ -137,38 +140,53 @@ static const struct regmap_config mcuio_gpio_regmap_config = {
 
 static irqreturn_t mcuio_gpio_irq_handler(int irq, void *devid)
 {
-	int i, stat;
-	/* read events status */
-	uint32_t status[2];
+	int stat;
 	struct mcuio_gpio *gpio = devid;
 	struct regmap *map = gpio->map;
+
+	if (gpio->irq_work_pending)
+		return IRQ_HANDLED;
 
 	/* mask __before__ reading status */
 	pr_debug("%s entered\n", __func__);
 
 	pr_debug("%s: reading status[0]\n", __func__);
-	stat = regmap_read(map, 0x928, &status[0]);
+	stat = regmap_read(map, 0x928, &gpio->status[0]);
 	if (stat < 0) {
 		dev_err(gpio->chip.dev,
 			"%s: error reading gpio status[0]\n", __func__);
 		goto end;
 	}
 	pr_debug("%s: reading status[1]\n", __func__);
-	stat = regmap_read(map, 0x92c, &status[1]);
+	stat = regmap_read(map, 0x92c, &gpio->status[1]);
 	if (stat < 0) {
 		dev_err(gpio->chip.dev,
 			"%s: error reading gpio status[1]\n", __func__);
 		goto end;
 	}
+
+	gpio->irq_work_pending = 1;
+	schedule_work(&gpio->irq_work);
+
+end:
+	pr_debug("leaving %s\n", __func__);
+	return IRQ_HANDLED;
+}
+
+static void mcuio_irq_handler_bh(struct work_struct *w)
+{
+	int i;
+	struct mcuio_gpio *gpio = container_of(w, struct mcuio_gpio,
+					       irq_work);
+
 	for (i = 0; i < gpio->chip.ngpio; i++)
-		if (test_bit(i, (unsigned long *)status)) {
+		if (test_bit(i, (unsigned long *)gpio->status)) {
 			pr_debug("%s: invoking handler for irq %d\n",
 				 __func__, gpio->irq_base + i);
 			handle_nested_irq(gpio->irq_base + i);
 		}
-end:
-	pr_debug("leaving %s\n", __func__);
-	return IRQ_HANDLED;
+
+	gpio->irq_work_pending = 0;
 }
 
 static int __mcuio_gpio_set_irq_flags(struct irq_data *d, u8 flags, u8 mask)
@@ -260,6 +278,7 @@ static int mcuio_gpio_probe(struct mcuio_device *mdev)
 	g->irqchip.irq_set_type		= mcuio_gpio_irq_set_type;
 	g->irqchip.irq_mask		= mcuio_gpio_irq_mask;
 	g->irqchip.irq_unmask		= mcuio_gpio_irq_unmask;
+	INIT_WORK(&g->irq_work, mcuio_irq_handler_bh);
 	regmap_read(map, 0x910, &g->out[0]);
 	regmap_read(map, 0x914, &g->out[1]);
 	pr_debug("%s: initial state = 0x%08x-0x%08x\n", __func__, g->out[0],
