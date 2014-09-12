@@ -64,7 +64,7 @@ static irqreturn_t irq_ctrl_irq_handler(int irq, void *__data)
 		return IRQ_NONE;
 	}
 	if (!status) {
-		dev_err(&mdev->dev, "irq status is 0\n");
+		dev_dbg(&mdev->dev, "irq status is 0\n");
 		return IRQ_NONE;
 	}
 	dev_dbg(&mdev->dev, "%s: irq status = 0x%08x\n", __func__, status);
