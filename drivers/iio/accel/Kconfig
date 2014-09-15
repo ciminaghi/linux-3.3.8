@@ -77,4 +77,16 @@ config MMA8452
 	  To compile this driver as a module, choose M here: the module
 	  will be called mma8452.
 
+config MMA8491
+	tristate "Freescale MMA8491 Accelerometer Driver"
+	depends on I2C
+	select IIO_BUFFER
+	select IIO_TRIGGERED_BUFFER
+	help
+	  Say yes here to build support for the Freescale MMA8491 3-axis
+	  accelerometer.
+
+	  To compile this driver as a module, choose M here: the module
+	  will be called mma8491.
+
 endmenu
