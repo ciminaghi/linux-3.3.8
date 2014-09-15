@@ -100,7 +100,7 @@ static inline int sht21_rh_ticks_to_per_cent_mille(int ticks)
  */
 static int sht21_update_measurements_hold(struct i2c_client *client)
 {
-	int ret = 0;
+	s32 ret = 0;
 	struct sht21 *sht21 = i2c_get_clientdata(client);
 
 	mutex_lock(&sht21->lock);
@@ -110,16 +110,18 @@ static int sht21_update_measurements_hold(struct i2c_client *client)
 	 * maximum two measurements per second at 12bit accuracy shall be made.
 	 */
 	if (time_after(jiffies, sht21->last_update + HZ / 2) || !sht21->valid) {
-		ret = i2c_smbus_read_word_swapped(client,
-						  SHT21_TRIG_T_MEASUREMENT_HM);
+		ret = i2c_smbus_read_word_data(client,
+					       SHT21_TRIG_T_MEASUREMENT_HM);
 		if (ret < 0)
 			goto out;
-		sht21->temperature = sht21_temp_ticks_to_millicelsius(ret);
-		ret = i2c_smbus_read_word_swapped(client,
-						  SHT21_TRIG_RH_MEASUREMENT_HM);
+		sht21->temperature =
+			sht21_temp_ticks_to_millicelsius(be16_to_cpu(ret));
+		ret = i2c_smbus_read_word_data(client,
+					       SHT21_TRIG_RH_MEASUREMENT_HM);
 		if (ret < 0)
 			goto out;
-		sht21->humidity = sht21_rh_ticks_to_per_cent_mille(ret);
+		sht21->humidity =
+			sht21_rh_ticks_to_per_cent_mille(be16_to_cpu(ret));
 		sht21->last_update = jiffies;
 		sht21->valid = 1;
 	}
