@@ -2845,6 +2845,7 @@ CONFIG_IIO_CONSUMERS_PER_TRIGGER=2
 # CONFIG_IIO_ST_ACCEL_3AXIS is not set
 # CONFIG_KXSD9 is not set
 CONFIG_MMA8452=y
+CONFIG_MMA8491=y
 
 #
 # Analog to digital converters
