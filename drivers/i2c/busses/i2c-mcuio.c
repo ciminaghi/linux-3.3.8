@@ -643,8 +643,8 @@ static int mcuio_simple_i2c_probe(struct mcuio_device *mdev)
 static int mcuio_simple_i2c_remove(struct mcuio_device *mdev)
 {
 	struct mcuio_i2c_dev *i2cd = dev_get_drvdata(&mdev->dev);
-	free_irq(mdev->irq, i2cd);
 	i2c_del_adapter(&i2cd->adapter);
+	free_irq(mdev->irq, i2cd);
 	return 0;
 }
 
