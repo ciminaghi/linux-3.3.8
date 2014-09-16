@@ -33,8 +33,8 @@
 
 static unsigned short pca9555_addr = 0x27;
 static unsigned int pca9555_base = 216;
-module_param(pca9555_addr, ushort, 0444);
-module_param(pca9555_base, uint, 0444);
+module_param(pca9555_addr, ushort, 0644);
+module_param(pca9555_base, uint, 0644);
 
 static struct pca953x_platform_data pca9555_plat;
 

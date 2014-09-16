@@ -42,13 +42,13 @@ static unsigned short mag3110_addr = 0x0e;
 static unsigned short sht21_addr = 0x40;
 static unsigned short ssd1307_addr = 0x3c;
 static unsigned short mma8491_addr = 0x55;
-module_param(pca9555_base, uint, 0444);
-module_param(pca9555_addr, ushort, 0444);
-module_param(mpl3115_addr, ushort, 0444);
-module_param(mag3110_addr, ushort, 0444);
-module_param(sht21_addr, ushort, 0444);
-module_param(ssd1307_addr, ushort, 0444);
-module_param(mma8491_addr, ushort, 0444);
+module_param(pca9555_base, uint, 0644);
+module_param(pca9555_addr, ushort, 0644);
+module_param(mpl3115_addr, ushort, 0644);
+module_param(mag3110_addr, ushort, 0644);
+module_param(sht21_addr, ushort, 0644);
+module_param(ssd1307_addr, ushort, 0644);
+module_param(mma8491_addr, ushort, 0644);
 
 struct ssd1307_platform_data ssd1307_plat = {
 	.type = SSD1307_TYPE_1306,
