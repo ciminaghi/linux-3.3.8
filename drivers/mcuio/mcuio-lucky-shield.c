@@ -42,6 +42,7 @@ static unsigned short mag3110_addr = 0x0e;
 static unsigned short sht21_addr = 0x40;
 static unsigned short ssd1307_addr = 0x3c;
 static unsigned short mma8491_addr = 0x55;
+static unsigned int mma8491_rst = 120;
 module_param(pca9555_base, uint, 0644);
 module_param(pca9555_addr, ushort, 0644);
 module_param(mpl3115_addr, ushort, 0644);
@@ -49,6 +50,7 @@ module_param(mag3110_addr, ushort, 0644);
 module_param(sht21_addr, ushort, 0644);
 module_param(ssd1307_addr, ushort, 0644);
 module_param(mma8491_addr, ushort, 0644);
+module_param(mma8491_rst, uint, 0644);
 
 struct ssd1307_platform_data ssd1307_plat = {
 	.type = SSD1307_TYPE_1306,
@@ -64,7 +66,7 @@ static struct pca953x_platform_data pca9555_plat;
 static struct mcuio_shld_i2c_info i2c_lst[] = {
 	MCUIO_SHLD_I2C_DEV("pca9555", &pca9555_addr, &pca9555_plat, 122),
 	MCUIO_SHLD_I2C_DEV("mpl3115", &mpl3115_addr, NULL, -1),
-	MCUIO_SHLD_I2C_DEV("mma8491", &mma8491_addr, NULL, -1),
+	MCUIO_SHLD_I2C_DEV("mma8491", &mma8491_addr, &mma8491_rst, -1),
 	MCUIO_SHLD_I2C_DEV("mag3110", &mag3110_addr, NULL, -1),
 	MCUIO_SHLD_I2C_DEV("sht21", &sht21_addr, NULL, -1),
 	MCUIO_SHLD_I2C_DEV("ssd1307fb", &ssd1307_addr, &ssd1307_plat, -1),

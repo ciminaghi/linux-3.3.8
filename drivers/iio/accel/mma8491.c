@@ -15,6 +15,7 @@
 #include <linux/iio/buffer.h>
 #include <linux/iio/triggered_buffer.h>
 #include <linux/delay.h>
+#include <linux/gpio.h>
 
 #define MMA8491_STATUS 0x00
 #define MMA8491_OUT_X 0x01 /* MSB first, 14-bit  */
@@ -27,6 +28,7 @@ struct mma8491_data {
 	struct mutex lock;
 	u8 ctrl_reg1;
 	u8 data_cfg;
+	unsigned rst_gpio;
 };
 
 static int mma8491_drdy(struct mma8491_data *data)
@@ -69,9 +71,11 @@ static int mma8491_read_raw(struct iio_dev *indio_dev,
 		if (iio_buffer_enabled(indio_dev))
 			return -EBUSY;
 
+		gpio_set_value_cansleep(data->rst_gpio, 1);
 		mutex_lock(&data->lock);
 		ret = mma8491_read(data, buffer);
 		mutex_unlock(&data->lock);
+		gpio_set_value_cansleep(data->rst_gpio, 0);
 		if (ret < 0)
 			return ret;
 		*val = sign_extend32(
@@ -146,6 +150,7 @@ static int mma8491_probe(struct i2c_client *client,
 
 	data = iio_priv(indio_dev);
 	data->client = client;
+	data->rst_gpio = *((unsigned*)dev_get_platdata(&client->dev));
 	mutex_init(&data->lock);
 
 	i2c_set_clientdata(client, indio_dev);
@@ -156,6 +161,16 @@ static int mma8491_probe(struct i2c_client *client,
 	indio_dev->channels = mma8491_channels;
 	indio_dev->num_channels = ARRAY_SIZE(mma8491_channels);
 	indio_dev->available_scan_masks = mma8491_scan_masks;
+
+	ret = devm_gpio_request_one(&client->dev, data->rst_gpio,
+				GPIOF_OUT_INIT_LOW,
+				"mma8491-reset");
+
+	if (ret) {
+		dev_err(&client->dev, "failed to request gpio %d: %d\n",
+			data->rst_gpio, ret);
+		return ret;
+	}
 
 	ret = iio_triggered_buffer_setup(indio_dev, NULL,
 		mma8491_trigger_handler, NULL);
