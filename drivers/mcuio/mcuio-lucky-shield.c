@@ -42,7 +42,7 @@ static unsigned short mag3110_addr = 0x0e;
 static unsigned short sht21_addr = 0x40;
 static unsigned short ssd1307_addr = 0x3c;
 static unsigned short mma8491_addr = 0x55;
-static unsigned int mma8491_rst = 120;
+static unsigned int mma8491_rst = 200;
 module_param(pca9555_base, uint, 0644);
 module_param(pca9555_addr, ushort, 0644);
 module_param(mpl3115_addr, ushort, 0644);
