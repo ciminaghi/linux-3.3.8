@@ -41,6 +41,7 @@ struct shld_probe_info {
 struct shld_probe_info shld_list[] = {
 	DH_SHLD("lucky", MCUIO_DEVICE_LUCKY_SHIELD, 32),
 	DH_SHLD("digitalio", MCUIO_DEVICE_DIGITALIO_SHIELD, 33),
+	DH_SHLD("dogoled", MCUIO_DEVICE_DOGOLED_SHIELD, 34),
 	{.name = NULL},
 };
 

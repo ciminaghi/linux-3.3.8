@@ -10,5 +10,6 @@ obj-$(CONFIG_MCUIO_IRQ_CTRL) += mcuio-irq-ctrl.o
 obj-$(CONFIG_MCUIO_JS_SHIELD) += mcuio-js-shield.o
 obj-$(CONFIG_MCUIO_LUCKY_SHIELD) += mcuio-lucky-shield.o
 obj-$(CONFIG_MCUIO_DIGITALIO_SHIELD) += mcuio-dio-shield.o
+obj-$(CONFIG_MCUIO_DOGOLED_SHIELD) += mcuio-dogoled-shield.o
 obj-$(CONFIG_MCUIO_SHIELDS_MANUAL_PROBE) += mcuio-shields-manprobe.o
 obj-$(CONFIG_MCUIO_ADC) += mcuio-adc.o
