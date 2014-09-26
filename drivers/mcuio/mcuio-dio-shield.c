@@ -95,7 +95,7 @@ static int mcuio_dio_remove(struct mcuio_device *mdev)
 
 	data = dev_get_drvdata(&mdev->dev);
 
-	/* Unregister all devices in Lucky shield, in opposite order as they
+	/* Unregister all devices in Digital IO shield, in opposite order as they
 	 * had been registered */
 	for (i = &data->i2c_info[data->i2c_cnt - 1];
 	     data->i2c_cnt; i--, data->i2c_cnt--) {
