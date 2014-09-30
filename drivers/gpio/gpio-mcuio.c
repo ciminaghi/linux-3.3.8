@@ -5,8 +5,6 @@
  * GNU GPLv2 or later
  */
 
-#define DEBUG
-
 /* mcuio host controller driver */
 
 #include <linux/kernel.h>
