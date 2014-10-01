@@ -260,4 +260,11 @@ config XILINX_XADC
 	  The driver can also be build as a module. If so, the module will be called
 	  xilinx-xadc.
 
+config MCUIO_ADC
+	tristate "mcuio ADC driver"
+	depends on MCUIO
+	default y
+	help
+	  Adds a driver mcuio ADC inputs (experimental)
+
 endmenu
