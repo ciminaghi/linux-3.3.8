@@ -301,7 +301,8 @@ static int mcuio_gpio_probe(struct mcuio_device *mdev)
 	}
 	for (i = 0; i < g->chip.ngpio; i++) {
 		regmap_read(map, 0x10 + i*4, (u32 *)&names[i*8]);
-		dev_dbg(&mdev->dev, "found gpio %s\n", &names[i*8]);
+		dev_dbg(&mdev->dev, "found gpio %u: %s\n",
+			 g->chip.base + i, &names[i*8]);
 		names_ptr[i] = &names[i*8];
 	}
 	g->chip.names = (const char *const *)names_ptr;
