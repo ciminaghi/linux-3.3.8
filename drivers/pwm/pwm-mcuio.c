@@ -7,8 +7,6 @@
 
 /* mcuio driver for PWM outputs */
 
-#define DEBUG 1
-
 #include <linux/clk.h>
 #include <linux/err.h>
 #include <linux/io.h>
@@ -211,7 +209,7 @@ static int mcuio_pwm_probe(struct mcuio_device *mdev)
 
 	data->map = map;
 
-	pr_debug("mcuio pwm is %u:%u:%u\n",
+	pr_info("mcuio pwm is %u:%u:%u\n",
 		 mdev->bus, mdev->device, mdev->fn);
 
 	data->chip.dev = &mdev->dev;
@@ -223,7 +221,7 @@ static int mcuio_pwm_probe(struct mcuio_device *mdev)
 		goto fail1;
 	}
 
-	dev_dbg(&mdev->dev, "%d pwm outputs detected\n", data->chip.npwm);
+	dev_info(&mdev->dev, "%d pwm outputs detected\n", data->chip.npwm);
 
 	dev_set_drvdata(&mdev->dev, data);
 
