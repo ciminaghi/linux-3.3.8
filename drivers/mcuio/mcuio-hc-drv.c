@@ -450,6 +450,26 @@ int mcuio_setup_cb(struct mcuio_request *r)
 }
 EXPORT_SYMBOL(mcuio_setup_cb);
 
+int mcuio_cancel_cb(struct mcuio_request *r)
+{
+	struct mcuio_request *ptr, *tmp;
+	struct mcuio_hc_data *data;
+
+	if (!r->hc)
+		return -EINVAL;
+	data = dev_get_drvdata(&r->hc->dev);
+	list_for_each_entry_safe(ptr, tmp, &data->pending_requests, list) {
+		if (ptr == r) {
+			mutex_lock(&data->lock);
+			list_del(&r->list);
+			mutex_unlock(&data->lock);
+			return 0;
+		}
+	}
+	return -ENOENT;
+}
+EXPORT_SYMBOL(mcuio_cancel_cb);
+
 int mcuio_hc_set_irqs(struct mcuio_device *hc, unsigned dev, int __irqs[])
 {
 	struct mcuio_hc_data *data = dev_get_drvdata(&hc->dev);
