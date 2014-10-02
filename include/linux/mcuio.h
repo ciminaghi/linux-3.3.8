@@ -118,6 +118,13 @@ int mcuio_submit_request(struct mcuio_request *r);
 int mcuio_setup_cb(struct mcuio_request *r);
 
 /*
+ * Cancel a callback for an incoming request
+ *
+ * @r: pointer to corresponding request
+ */
+int mcuio_cancel_cb(struct mcuio_request *r);
+
+/*
  * Fill a non-dynamically allocated mcuio request
  */
 void mcuio_init_request(struct mcuio_request *r,
