@@ -380,8 +380,14 @@ static int __receive_messages(void *__data)
 		}
 		r->status = mcuio_packet_is_error(p);
 		cancel_delayed_work_sync(&r->to_work);
-		if (mcuio_packet_is_read(p))
+		if (mcuio_packet_is_reply(p)) {
+			if (mcuio_packet_is_read(p))
+				__copy_data(r->data, p, 1);
+		} else {
+			r->offset = mcuio_packet_offset(p);
+			r->fill = mcuio_packet_is_fill_data(p);
 			__copy_data(r->data, p, 1);
+		}
 		if (r->cb)
 			r->cb(r);
 		__dequeue_request(r);
