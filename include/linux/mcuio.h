@@ -74,9 +74,9 @@ typedef void (*request_cb)(struct mcuio_request *);
  */
 #define MCUIO_REQUEST_FILL BIT(0)
 /*
- * outgoing: if this is !0 the request is outgoing (incoming otherwise)
+ * incoming: if this is !0 the request is incoming (outgoing otherwise)
  */
-#define MCUIO_REQUEST_OUTGOING BIT(1)
+#define MCUIO_REQUEST_INCOMING BIT(1)
 
 /*
  * This represents an mcuio request
@@ -127,16 +127,16 @@ static inline void mcuio_request_set_fill(struct mcuio_request *r, int f)
 		r->flags |= MCUIO_REQUEST_FILL;
 }
 
-static inline int mcuio_request_is_outgoing(struct mcuio_request *r)
+static inline int mcuio_request_is_incoming(struct mcuio_request *r)
 {
-	return r->flags & MCUIO_REQUEST_OUTGOING;
+	return r->flags & MCUIO_REQUEST_INCOMING;
 }
 
-static inline void mcuio_request_set_outgoing(struct mcuio_request *r, int f)
+static inline void mcuio_request_set_incoming(struct mcuio_request *r, int f)
 {
-	r->flags &= ~MCUIO_REQUEST_OUTGOING;
+	r->flags &= ~MCUIO_REQUEST_INCOMING;
 	if (f)
-		r->flags |= MCUIO_REQUEST_OUTGOING;
+		r->flags |= MCUIO_REQUEST_INCOMING;
 }
 
 /*
