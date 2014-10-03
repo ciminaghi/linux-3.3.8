@@ -239,11 +239,11 @@ static struct tty_operations spi_serial_ops = {
 };
 
 static void spi_serial_port_dtr_rts(struct tty_port *port, int on){
-	pr_info("%s:%d\n", __func__, __LINE__);
+	/* Nothing to do */
 }
 
 static const struct tty_port_operations spi_serial_port_ops = {
-	.dtr_rts = spi_serial_port_dtr_rts,
+	.dtr_rts = spi_serial_port_dtr_rts, /* required, even if empty */
 };
 
 static void spi_poll_work_handler(struct work_struct *w)
