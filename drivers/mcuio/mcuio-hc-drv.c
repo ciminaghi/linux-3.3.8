@@ -146,7 +146,7 @@ static void __dequeue_request(struct mcuio_request *r)
 static void __request_to_packet(struct mcuio_request *r, struct mcuio_packet *p)
 {
 	mcuio_packet_set_addr(p, r->hc->bus, r->dev, r->func, r->offset,
-			      r->type, r->fill);
+			      r->type, mcuio_request_is_fill(r));
 	if (mcuio_packet_is_read(p)) {
 		p->data[0] = p->data[1] = 0;
 		return;
@@ -170,7 +170,7 @@ static void __init_request(struct mcuio_request *r,
 	r->offset = offset;
 	r->offset_mask = offset_mask;
 	r->status = -ETIMEDOUT;
-	r->fill = fill;
+	mcuio_request_set_fill(r, fill);
 }
 
 struct mcuio_request *mcuio_make_request(struct mcuio_device *mdev,
@@ -385,7 +385,7 @@ static int __receive_messages(void *__data)
 				__copy_data(r->data, p, 1);
 		} else {
 			r->offset = mcuio_packet_offset(p);
-			r->fill = mcuio_packet_is_fill_data(p);
+			mcuio_request_set_fill(r, mcuio_packet_is_fill_data(p));
 			__copy_data(r->data, p, 1);
 		}
 		if (r->cb)

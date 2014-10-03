@@ -66,6 +66,15 @@ struct mcuio_request;
 typedef void (*request_cb)(struct mcuio_request *);
 
 /*
+ * mcuio request flags
+ */
+/*
+ * fill: if this is !0 the resulting request packet shall have its fill data
+ *       flag set
+ */
+#define MCUIO_REQUEST_FILL BIT(0)
+
+/*
  * This represents an mcuio request
  * @hc: pointer to host controller mcuio device
  * @dev: destination device
@@ -81,8 +90,7 @@ typedef void (*request_cb)(struct mcuio_request *);
  * @list: used for enqueueing requests
  * @to_work: delayed_work struct for request timeout management
  * @priv: private data. FIX THIS
- * @fill: if this is !0 the resulting request packet shall have its fill data
- *	  flag set
+ * @flags: request flags (MCUIO_REQUEST_XXX)
  * @release: pointer to memory release function
  */
 struct mcuio_request {
@@ -99,9 +107,21 @@ struct mcuio_request {
 	struct list_head list;
 	struct delayed_work to_work;
 	void *priv;
-	int fill;
+	unsigned int flags;
 	void (*release)(struct mcuio_request *);
 };
+
+static inline int mcuio_request_is_fill(struct mcuio_request *r)
+{
+	return r->flags & MCUIO_REQUEST_FILL;
+}
+
+static inline void mcuio_request_set_fill(struct mcuio_request *r, int f)
+{
+	r->flags &= ~MCUIO_REQUEST_FILL;
+	if (f)
+		r->flags |= MCUIO_REQUEST_FILL;
+}
 
 /*
  * Submit a request, block until request done
