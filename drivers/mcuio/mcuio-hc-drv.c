@@ -208,7 +208,8 @@ static void __request_timeout(struct work_struct *work)
 		container_of(work, struct mcuio_request, to_work.work);
 	if (r->cb)
 		r->cb(r);
-	__dequeue_request(r);
+	if (!mcuio_request_is_incoming(r))
+		__dequeue_request(r);
 }
 
 static int __write_message(struct regmap *map, const u32 *ptr, int count)
@@ -390,7 +391,8 @@ static int __receive_messages(void *__data)
 		}
 		if (r->cb)
 			r->cb(r);
-		__dequeue_request(r);
+		if (!mcuio_request_is_incoming(r))
+			__dequeue_request(r);
 	}
 	return 0;
 }
@@ -407,6 +409,7 @@ static void __enqueue_request(struct mcuio_device *mdev,
 			      struct mcuio_request *r,
 			      int outgoing)
 {
+	mcuio_request_set_incoming(r, !outgoing);
 	mutex_lock(&data->lock);
 	list_add_tail(&r->list, outgoing ? &data->request_queue :
 		      &data->pending_requests);
