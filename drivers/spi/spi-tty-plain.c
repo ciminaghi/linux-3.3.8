@@ -217,6 +217,7 @@ static int spi_serial_tty_install(struct tty_driver *driver,
 	tty->count++;
 
 	ttys[0] = tty;
+	driver->ttys = ttys;
 
 	return 0;
 }
