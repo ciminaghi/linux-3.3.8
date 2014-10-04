@@ -40,8 +40,6 @@ static spinlock_t lock;
 struct spi_tty {
 	struct spi_device *spi;
 
-	unsigned long flags;
-
 	unsigned int tty_minor;
 	struct device *tty_dev;
 	struct tty_port port;
