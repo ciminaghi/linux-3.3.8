@@ -12,7 +12,6 @@
 #include <linux/init.h>
 #include <linux/interrupt.h>
 #include <linux/spi/spi.h>
-#include <linux/gpio.h>
 #include <linux/spinlock.h>
 #include <linux/serial.h>
 #include <linux/tty.h>
@@ -251,7 +250,7 @@ static void spi_poll_work_handler(struct work_struct *w)
 	stty = container_of(to_delayed_work(w), struct spi_tty, work);
 
 	__spi_serial_tty_write(stty, stty->enq_buf, sizeof(stty->enq_buf), 0);
-	if ((!delayed_work_pending(&stty->work)))
+	if (!delayed_work_pending(&stty->work))
 		queue_delayed_work(stty->wq, &stty->work, wqinterval);
 }
 
