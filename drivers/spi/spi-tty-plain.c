@@ -79,16 +79,21 @@ static int spi_serial_tty_open(struct tty_struct *tty, struct file *filp)
 static void spi_serial_tty_close(struct tty_struct *tty, struct file *filp)
 {
 	struct spi_tty *stty = tty_to_spitty(tty);
+	struct tty_port *port = &stty->port;
 
-	dev_vdbg(tty->dev, "%s:%d\n", __func__, __LINE__);
+	if (tty_port_close_start(port, tty, filp) == 0)
+		return;
 
-	mutex_lock(&stty->mtx);
+	mutex_lock(&port->mutex);
 	tty_ldisc_flush(tty);
-	tty_port_close(&stty->port, tty, filp);
-	mutex_unlock(&stty->mtx);
+	tty_port_tty_set(port, NULL);
+	tty_port_close_end(port, tty);
+	mutex_unlock(&port->mutex);
 
-	wake_up_interruptible(&stty->port.open_wait);
-	wake_up_interruptible(&stty->port.close_wait);
+	wake_up_interruptible(&port->open_wait);
+	wake_up_interruptible(&port->close_wait);
+
+	return;
 }
 
 /*
@@ -159,7 +164,7 @@ static int __spi_serial_tty_write(struct spi_tty *stty,
 		dev_dbg(stty->tty_dev, "%s %d bytes, spi_sync returns %d\n",
 			__func__, len, ret);
 
-	tty = tty_port_tty_get(&stty->port);
+	tty = ttys[0];
 
 	if (!tty)
 		goto end;
@@ -222,6 +227,7 @@ static int spi_serial_tty_install(struct tty_driver *driver,
 static void spi_serial_tty_remove(struct tty_driver *self,
 				  struct tty_struct *tty)
 {
+	self->ttys = NULL;
 	ttys[0] = NULL;
 }
 
@@ -336,10 +342,8 @@ static int spi_tty_remove(struct spi_device *spi)
 		dev_count--;
 	spin_unlock_irqrestore(&lock, flags);
 
-	spi_serial_tty_remove(spi_serial_tty_driver, NULL);
 	/* Remove device */
 	tty_unregister_device(spi_serial_tty_driver, stty->tty_minor);
-
 	kfree(stty);
 	return 0;
 }
