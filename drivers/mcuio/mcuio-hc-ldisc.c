@@ -25,10 +25,12 @@
  */
 #define N_MCUIO 29
 
+#define PSIZE ((int)sizeof(struct mcuio_packet))
+
 struct ldisc_priv_data {
 	struct device *dev;
-	struct circ_buf cbuf;
-	char buf[sizeof(struct mcuio_packet) * 4];
+	int blen;
+	char buf[PSIZE];
 };
 
 
@@ -65,7 +67,6 @@ static int mcuio_ldisc_open(struct tty_struct *tty)
 	if (!priv)
 		return -ENOMEM;
 	priv->dev = dev;
-	priv->cbuf.buf = priv->buf;
 	tty->disc_data = priv;
 	return 0;
 }
@@ -94,7 +95,8 @@ static void mcuio_ldisc_receive_buf(struct tty_struct *tty,
 	struct ldisc_priv_data *priv = tty->disc_data;
 	struct mcuio_hc_platform_data *plat;
 	struct device *dev;
-	int i, space, cnt;
+	int i, s, togo, done;
+
 	if (!priv)
 		return;
 	dev = priv->dev;
@@ -103,26 +105,21 @@ static void mcuio_ldisc_receive_buf(struct tty_struct *tty,
 		WARN_ON(1);
 		return;
 	}
-	space = CIRC_SPACE(priv->cbuf.head, priv->cbuf.tail,
-			   sizeof(priv->buf));
-	if (count > space)
-		pr_debug("not enough space\n");
-	for (i = 0; i < min(count, space); i++) {
-		priv->buf[priv->cbuf.head] = cp[i];
-		priv->cbuf.head = (priv->cbuf.head + 1) &
-			(sizeof(priv->buf) - 1);
-	}
-	for (i = 0; ; i += sizeof(struct mcuio_packet)) {
-		cnt = CIRC_CNT(priv->cbuf.head, priv->cbuf.tail,
-			       sizeof(priv->buf));
-		if (cnt < sizeof(struct mcuio_packet))
+	for (i = 0; i < count; i++)
+		if (fp[i]) {
+			pr_err("%s: flags for char %d = 0x%02x\n",
+			       __func__, i, (u8)fp[i]);
+		}
+
+	for (togo = count, done = 0; togo; priv->blen = 0) {
+		s = min(togo, PSIZE - priv->blen);
+		memcpy(&priv->buf[priv->blen], &cp[done], s);
+		priv->blen += s;
+		togo -= s;
+		done += s;
+		if (priv->blen < PSIZE)
 			break;
-		mcuio_soft_hc_push_chars(plat->data,
-					 &priv->buf[priv->cbuf.tail],
-					 sizeof(struct mcuio_packet));
-		priv->cbuf.tail =
-			(priv->cbuf.tail + sizeof(struct mcuio_packet)) &
-			(sizeof(priv->buf) - 1);
+		mcuio_soft_hc_push_chars(plat->data, priv->buf, PSIZE);
 	}
 }
 
