@@ -215,11 +215,16 @@ static void __request_timeout(struct work_struct *work)
 static int __write_message(struct regmap *map, const u32 *ptr, int count)
 {
 	int i, stat;
+
+	pr_debug("%s:", __func__);
+	dump_packet((struct mcuio_packet *)ptr);
 	for (i = 0; i < count; i++) {
 		stat = regmap_write(map,
 				    MCUIO_HC_OUTBUF + i * sizeof(u32), ptr[i]);
-		if (stat < 0)
+		if (stat) {
+			pr_err("%s: error %d writing to hc\n", __func__, stat);
 			return stat;
+		}
 	}
 	return 0;
 }
