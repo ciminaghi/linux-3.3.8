@@ -370,20 +370,29 @@ static int __receive_messages(void *__data)
 			continue;
 		}
 		p = (struct mcuio_packet *)buf;
+		pr_debug("%s %d, packet received, type = %d\n",
+			 __func__, __LINE__, mcuio_packet_type(p));
+		dump_packet(p);
 		if (!mcuio_packet_is_reply(p)) {
-			if (mcuio_packet_is_read(p))
+			if (mcuio_packet_is_read(p)) {
 				/*
 				  Packet is a read request, we do not handle
 				  read requests at the moment
 				*/
+				pr_debug("%s %d: unexpected read req\n",
+					 __func__, __LINE__);
 				continue;
+			}
 		}
 		r = __find_request(hc, p);
 		if (!r) {
 			dev_err(&hc->dev, "unexpected reply");
+			dump_packet(p);
 			continue;
 		}
 		r->status = mcuio_packet_is_error(p);
+		pr_debug("%s %d, r->status = %d\n", __func__, __LINE__,
+			 r->status);
 		cancel_delayed_work_sync(&r->to_work);
 		if (mcuio_packet_is_reply(p)) {
 			if (mcuio_packet_is_read(p))
