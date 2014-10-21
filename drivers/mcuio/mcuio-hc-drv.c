@@ -318,8 +318,10 @@ static int __read_message(struct mcuio_hc_data *data,
 	}
 	for (i = 0; i < count; i++, ptr++) {
 		stat = regmap_read(map, MCUIO_HC_INBUF + i * sizeof(u32), ptr);
-		if (stat < 0)
+		if (stat < 0) {
+			pr_err("%s error %d reading from hc\n", __func__, stat);
 			return stat;
+		}
 	}
 	return 0;
 }
