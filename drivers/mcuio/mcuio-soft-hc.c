@@ -86,8 +86,20 @@ static int mcuio_soft_hc_reg_read(void *context, unsigned int reg,
 		*val = shc->irqno;
 		return sizeof(*val);
 	case MCUIO_IRQ_STAT:
+	{
+		struct circ_buf *buf = &shc->rx_circ_buf;
+		unsigned int new_irqstat;
+
 		*val = shc->irqstat;
+
+		pr_debug("%s: autoclear shc irqstat\n", __func__);
+		new_irqstat = CIRC_CNT(buf->head, buf->tail,
+				       sizeof(shc->rx_buf)) ? RX_RDY : 0;
+		shc->irqstat = new_irqstat;
+		pr_debug("%s: new shc irqstat = 0x%08x\n", __func__,
+			shc->irqstat);
 		return sizeof(*val);
+	}
 	default:
 		return -EPERM;
 	}
