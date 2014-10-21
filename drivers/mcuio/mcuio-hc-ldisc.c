@@ -36,11 +36,15 @@ struct ldisc_priv_data {
 static int mcuio_ldisc_shc_write(struct mcuio_soft_hc *shc,
 				 const u8 *ptr, unsigned int len)
 {
-	int stat;
+	int stat, count;
 	struct tty_struct *tty = shc->priv;
-	/* FIXME: CHECK FOR FREE SPACE IN BUFFER */
-	stat = tty->ops->write(tty, (char *)ptr, len);
-	return stat == len ? 0 : stat;
+
+	for (count = 0; count < len; count += stat) {
+		stat = tty->ops->write(tty, (char *)&ptr[count], len - count);
+		if (stat < 0)
+			break;
+	}
+	return stat < 0 ? stat : 0;
 }
 
 static const struct mcuio_soft_hc_ops ops = {
