@@ -35,6 +35,7 @@ struct mcuio_soft_hc_ops {
  * @irq_kworker:
  * @irq_kworker_task:
  * @do_irq:
+ * @hc: pointer to host controller (mcuio device)
  * @priv: client driver private data
  */
 struct mcuio_soft_hc {
@@ -49,6 +50,7 @@ struct mcuio_soft_hc {
 	struct kthread_worker irq_kworker;
 	struct task_struct *irq_kworker_task;
 	struct kthread_work do_irq;
+	struct mcuio_device *hc;
 	void *priv;
 };
 
