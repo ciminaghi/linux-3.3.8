@@ -280,9 +280,6 @@ static irqreturn_t hc_irq_handler(int irq, void *__data)
 		return IRQ_NONE;
 	if (status & RX_RDY)
 		wake_up_interruptible(&data->rd_wq);
-	ret = regmap_write(map, MCUIO_IRQ_CLR, status);
-	if (ret < 0)
-		dev_err(&mdev->dev, "error clearing irq flag\n");
 	return IRQ_HANDLED;
 }
 
