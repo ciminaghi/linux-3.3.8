@@ -632,6 +632,10 @@ static int mcuio_simple_i2c_probe(struct mcuio_device *mdev)
 	ret = request_threaded_irq(mdev->irq, NULL, mcuio_i2c_irq_handler,
 				   IRQF_TRIGGER_LOW | IRQF_ONESHOT,
 				   "mcuio-i2c", i2cd);
+	if (ret < 0) {
+		dev_err(&mdev->dev, "failed requesting irq\n");
+		return ret;
+	}
 
 	i2c_set_adapdata(a, i2cd);
 
