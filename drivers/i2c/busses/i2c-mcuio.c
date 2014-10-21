@@ -225,6 +225,11 @@ static irqreturn_t mcuio_i2c_irq_handler(int irq, void *devid)
 
 	BUG_ON(!i2cd || !i2cd->map_dw);
 	stat = regmap_read(i2cd->map_dw, I2C_MCUIO_STATUS, &v);
+	if (stat < 0) {
+		dev_err(&i2cd->mdev->dev, "error reading i2c status\n");
+		/* This will make the transaction end with -EIO */
+		v = NAK_RECEIVED;
+	}
 	dev_dbg(&i2cd->mdev->dev, "%s: status = 0x%08x\n", __func__, v);
 	if (v & LOW_OBUF_WATERMARK)
 		__send_obuf(i2cd);
