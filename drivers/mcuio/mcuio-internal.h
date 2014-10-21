@@ -15,6 +15,9 @@ struct i2c_adapter *mcuio_get_i2c_adapter(struct mcuio_device *mdev);
 
 struct mcuio_device *mcuio_bus_find_hc(int bus);
 
+struct mcuio_device *mcuio_add_soft_local_irq_ctrl(struct mcuio_device *hc,
+						   int fn, int base_irq);
+
 #ifdef DEBUG
 static inline void dump_packet(struct mcuio_packet *p)
 {
