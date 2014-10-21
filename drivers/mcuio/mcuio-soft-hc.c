@@ -263,6 +263,7 @@ struct device *mcuio_add_soft_hc(struct mcuio_device_id *id,
 {
 	struct mcuio_hc_platform_data *plat;
 	struct mcuio_soft_hc *shc = __setup_shc(ops, priv);
+	struct device *out;
 	if (!shc)
 		return ERR_PTR(-ENOMEM);
 	plat = kzalloc(sizeof(*plat), GFP_KERNEL);
@@ -272,8 +273,14 @@ struct device *mcuio_add_soft_hc(struct mcuio_device_id *id,
 	}
 	plat->setup_regmap = mcuio_soft_hc_setup_regmap;
 	plat->data = shc;
-	return mcuio_add_hc_device(id ? id : &default_soft_hc_id, plat,
-				   mcuio_soft_hc_release);
+	out = mcuio_add_hc_device(id ? id : &default_soft_hc_id, plat,
+				  mcuio_soft_hc_release);
+	if (IS_ERR(out)) {
+		kfree(shc);
+		return out;
+	}
+	shc->hc = to_mcuio_dev(out);
+	return out;
 }
 EXPORT_SYMBOL(mcuio_add_soft_hc);
 
