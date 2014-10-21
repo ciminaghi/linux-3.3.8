@@ -11,6 +11,8 @@
 #define __MCUIO_SOFT_HOST_CONTROLLER_H__
 
 #include <linux/circ_buf.h>
+#include <linux/workqueue.h>
+#include <linux/kthread.h>
 #include <linux/irq.h>
 
 struct mcuio_soft_hc;
@@ -30,6 +32,9 @@ struct mcuio_soft_hc_ops {
  * @rx_buf: actual rx data buffer
  * @ops: pointer to hc operations
  * @chip: related irqchip
+ * @irq_kworker:
+ * @irq_kworker_task:
+ * @do_irq:
  * @priv: client driver private data
  */
 struct mcuio_soft_hc {
@@ -41,6 +46,9 @@ struct mcuio_soft_hc {
 	char rx_buf[256];
 	const struct mcuio_soft_hc_ops *ops;
 	struct irq_chip chip;
+	struct kthread_worker irq_kworker;
+	struct task_struct *irq_kworker_task;
+	struct kthread_work do_irq;
 	void *priv;
 };
 

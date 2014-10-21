@@ -138,7 +138,7 @@ int mcuio_soft_hc_push_chars(struct mcuio_soft_hc *shc, const u8 *in, int len)
 	/* set irq status register RX_RDY bit */
 	shc->irqstat |= RX_RDY;
 	if (shc->irq_enabled)
-		handle_nested_irq(shc->irqno);
+		queue_kthread_work(&shc->irq_kworker, &shc->do_irq);
 	return actual;
 }
 EXPORT_SYMBOL(mcuio_soft_hc_push_chars);
@@ -196,12 +196,29 @@ static void mcuio_soft_hc_irq_unmask(struct irq_data *d)
 	shc->irq_enabled = 1;
 }
 
+static void __do_irq(struct kthread_work *work)
+{
+	struct mcuio_soft_hc *shc =
+		container_of(work, struct mcuio_soft_hc, do_irq);
+
+	handle_nested_irq(shc->irqno);
+}
+
 static struct mcuio_soft_hc *__setup_shc(const struct mcuio_soft_hc_ops *ops,
 					 void *priv)
 {
 	struct mcuio_soft_hc *shc = kzalloc(sizeof(*shc), GFP_KERNEL);
 	if (!shc)
 		return ERR_PTR(-ENOMEM);
+	init_kthread_worker(&shc->irq_kworker);
+	shc->irq_kworker_task = kthread_run(kthread_worker_fn,
+					    &shc->irq_kworker,
+					    "shc_irq");
+	if (IS_ERR(shc->irq_kworker_task)) {
+		pr_err("failed to create irq tsk for shc\n");
+		return ERR_PTR(PTR_ERR(shc->irq_kworker_task));
+	}
+	init_kthread_work(&shc->do_irq, __do_irq);
 	shc->ops = ops;
 	shc->priv = priv;
 	shc->rx_circ_buf.head = shc->rx_circ_buf.tail = 0;
