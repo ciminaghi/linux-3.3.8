@@ -22,6 +22,9 @@
 #define MCUIO_CLASS_IRQ_CONTROLLER_WIRE   0x000b
 /* Add-on shield */
 #define MCUIO_CLASS_SHIELD	    0x000c
+/* Local message based irq controller */
+#define MCUIO_CLASS_SOFT_LOCAL_IRQ_CONTROLLER_PROTO 0x000d
+
 
 /* Invalid device id (used for id table termination */
 #define MCUIO_NO_DEVICE		    0x0000
@@ -38,5 +41,6 @@
 #define MCUIO_DEVICE_SOFT_HC	     0x0004
 #define MCUIO_DEVICE_GENERIC_HC	     0x0005
 #define MCUIO_DEVICE_DOGOLED_SHIELD	0x0006
+#define MCUIO_DEVICE_LOCAL_IRQC_MSG  0x0007
 
 #endif /* __MCUIO_IDS_H__ */
