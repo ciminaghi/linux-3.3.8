@@ -14,6 +14,7 @@
 #include <linux/workqueue.h>
 #include <linux/kthread.h>
 #include <linux/irq.h>
+#include <linux/mcuio-proto.h>
 
 struct mcuio_soft_hc;
 
@@ -36,6 +37,7 @@ struct mcuio_soft_hc_ops {
  * @irq_kworker_task:
  * @do_irq:
  * @hc: pointer to host controller (mcuio device)
+ * @irq_controllers: array of pointers to soft irq controllers
  * @priv: client driver private data
  */
 struct mcuio_soft_hc {
@@ -51,6 +53,7 @@ struct mcuio_soft_hc {
 	struct task_struct *irq_kworker_task;
 	struct kthread_work do_irq;
 	struct mcuio_device *hc;
+	struct mcuio_device *irq_controllers[MCUIO_DEVS_PER_BUS];
 	void *priv;
 };
 
