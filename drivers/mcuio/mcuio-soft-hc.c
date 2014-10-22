@@ -25,6 +25,8 @@
 #include <linux/mcuio-soft-hc.h>
 #include "mcuio-internal.h"
 
+static struct notifier_block device_nb;
+
 static bool mcuio_soft_hc_readable(struct device *dev, unsigned int reg)
 {
 	return true;
@@ -245,17 +247,86 @@ static void mcuio_soft_hc_release(struct device *device)
 {
 	struct mcuio_hc_platform_data *plat = dev_get_platdata(device);
 	struct mcuio_soft_hc *shc;
+	int i;
 	if (!plat) {
 		WARN_ON(1);
 		return;
 	}
 	shc = plat->data;
+	bus_unregister_notifier(&mcuio_bus_type, &device_nb);
+	/* Unregister all irq controllers */
+	for (i = 0; i < MCUIO_DEVS_PER_BUS; i++)
+		if (shc->irq_controllers[i])
+			mcuio_device_unregister(shc->irq_controllers[i]);
 	irq_set_handler(shc->irqno, NULL);
 	irq_set_chip(shc->irqno, NULL);
 	irq_free_desc(shc->irqno);
 	kfree(shc);
 	mcuio_hc_dev_default_release(device);
 }
+
+static void __device_added(struct device *dev)
+{
+	struct mcuio_device *mdev = to_mcuio_dev(dev);
+	struct mcuio_device *hc;
+	struct mcuio_soft_hc *shc;
+	struct mcuio_device *ic;
+	struct mcuio_hc_platform_data *plat;
+	int base_irq;
+
+	/* Ignore the hc */
+	if (!mdev->device)
+		return;
+	hc = to_mcuio_dev(dev->parent);
+	plat = dev_get_platdata(&hc->dev);
+	if (!plat) {
+		WARN_ON(1);
+		return;
+	}
+	shc = plat->data;
+	if (!shc) {
+		WARN_ON(1);
+		return;
+	}
+	/* FIXME: ADD LOCKING */
+	ic = shc->irq_controllers[mdev->device];
+	if (ic)
+		return;
+	base_irq = irq_alloc_descs(-1, 0, MCUIO_FUNCS_PER_DEV, 0);
+	/* New device, add soft local irq controller */
+	ic = mcuio_add_soft_local_irq_ctrl(hc, mdev->device, base_irq);
+	if (!ic) {
+		pr_err("mcuio soft hc: error adding irq ctrl for dev %d\n",
+		       mdev->device);
+		return;
+	}
+	shc->irq_controllers[mdev->device] = ic;
+	/*
+	  This is the first function of the new device. When the corresponding
+	  mcuio_device was instantiated, the hc had no irqs, fix the field
+	  up now
+	*/
+	mdev->irq = base_irq + mdev->fn;
+}
+
+static int mcuio_add_notifier(struct notifier_block *nb,
+			      unsigned long action, void *data)
+{
+	struct device *dev = data;
+
+	switch (action) {
+	case BUS_NOTIFY_ADD_DEVICE:
+		__device_added(dev);
+		break;
+	default:
+		return NOTIFY_DONE;
+	}
+	return NOTIFY_OK;
+}
+
+static struct notifier_block device_nb = {
+	.notifier_call = mcuio_add_notifier,
+};
 
 struct device *mcuio_add_soft_hc(struct mcuio_device_id *id,
 				 const struct mcuio_soft_hc_ops *ops,
@@ -264,6 +335,7 @@ struct device *mcuio_add_soft_hc(struct mcuio_device_id *id,
 	struct mcuio_hc_platform_data *plat;
 	struct mcuio_soft_hc *shc = __setup_shc(ops, priv);
 	struct device *out;
+	int stat;
 	if (!shc)
 		return ERR_PTR(-ENOMEM);
 	plat = kzalloc(sizeof(*plat), GFP_KERNEL);
@@ -273,10 +345,18 @@ struct device *mcuio_add_soft_hc(struct mcuio_device_id *id,
 	}
 	plat->setup_regmap = mcuio_soft_hc_setup_regmap;
 	plat->data = shc;
+
+	stat = bus_register_notifier(&mcuio_bus_type, &device_nb);
+	if (stat < 0) {
+		kfree(shc);
+		return ERR_PTR(stat);
+	}
+
 	out = mcuio_add_hc_device(id ? id : &default_soft_hc_id, plat,
 				  mcuio_soft_hc_release);
 	if (IS_ERR(out)) {
 		kfree(shc);
+		bus_unregister_notifier(&mcuio_bus_type, &device_nb);
 		return out;
 	}
 	shc->hc = to_mcuio_dev(out);
