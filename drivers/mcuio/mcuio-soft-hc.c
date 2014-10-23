@@ -336,8 +336,8 @@ struct device *mcuio_add_soft_hc(struct mcuio_device_id *id,
 	struct mcuio_soft_hc *shc = __setup_shc(ops, priv);
 	struct device *out;
 	int stat;
-	if (!shc)
-		return ERR_PTR(-ENOMEM);
+	if (IS_ERR(shc))
+		return ERR_PTR(PTR_ERR(shc));
 	plat = kzalloc(sizeof(*plat), GFP_KERNEL);
 	if (!plat) {
 		kfree(shc);
