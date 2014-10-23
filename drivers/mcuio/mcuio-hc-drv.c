@@ -584,6 +584,8 @@ static void __do_enum(struct kthread_work *work)
 
 	for (edev = 1, efunc = 0, stop_enum = 0; !stop_enum;
 	     stop_enum = __next_enum(&edev, &efunc, &retry)) {
+		if (kthread_should_stop())
+			break;
 		stat = __do_one_enum(mdev, edev, efunc, &r);
 		if (!r) {
 			dev_err(&mdev->dev, "no request\n");
@@ -709,6 +711,8 @@ static int mcuio_host_controller_remove(struct mcuio_device *mdev)
 	struct mcuio_hc_data *data = dev_get_drvdata(&mdev->dev);
 	atomic_set(&data->removing, 1);
 	barrier();
+	kthread_stop(data->enum_kworker_task);
+	kthread_stop(data->rx_thread);
 	flush_kthread_worker(&data->tx_kworker);
 	kthread_stop(data->tx_kworker_task);
 	__cleanup_outstanding_requests(data);
