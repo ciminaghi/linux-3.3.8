@@ -58,3 +58,10 @@ config MCUIO_SHIELDS_MANUAL_PROBE
 	help
 	  Since autoprobe of mcuio shields is not implemented yet, this option
 	  makes it possible to manually register shields (experimental).
+
+config MCUIO_IRQ_TEST
+        tristate "mcuio irq test function driver"
+	depends on MCUIO
+	default n
+	help
+	  Adds a driver for the irq test mcuio function
