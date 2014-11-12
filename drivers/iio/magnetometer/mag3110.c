@@ -56,7 +56,7 @@ struct mag3110_data {
 
 static int mag3110_request(struct mag3110_data *data)
 {
-	int ret, tries = 150;
+	int ret, tries = 1500;
 
 	/* trigger measurement */
 	ret = i2c_smbus_write_byte_data(data->client, MAG3110_CTRL_REG1,
