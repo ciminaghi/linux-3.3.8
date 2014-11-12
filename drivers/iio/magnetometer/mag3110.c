@@ -67,7 +67,7 @@ static int mag3110_request(struct mag3110_data *data)
 	while (tries-- > 0) {
 		ret = i2c_smbus_read_byte_data(data->client, MAG3110_STATUS);
 		if (ret < 0)
-			return ret;
+			continue;
 		/* wait for data ready */
 		if ((ret & MAG3110_STATUS_DRDY) == MAG3110_STATUS_DRDY)
 			break;
